@@ -11,6 +11,7 @@ import {
 } from '../../design-system/components';
 import { useRepositories } from '../../app/providers/RepositoryProvider';
 import { useSession } from '../../app/providers/SessionProvider';
+import { AccountAccessError } from '../account/AccountAccessError';
 export function WelcomePage({ login = false }: { login?: boolean }) {
   const { t } = useI18n();
   const session = useSession();
@@ -121,10 +122,7 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
       </div>
       {error && <ErrorState inline description={t(error)} />}{' '}
       {session.mode === 'live' && session.status === 'error' && (
-        <ErrorState
-          description={t('account.unavailable')}
-          onRetry={() => void session.reload()}
-        />
+        <AccountAccessError />
       )}{' '}
       {session.mode === 'live' && session.status === 'loadingAccount' && (
         <LoadingState />

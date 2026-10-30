@@ -42,6 +42,7 @@ function mockApi(initial?: Account) {
     updatedAt: '2026-10-30T00:00:00.000Z',
   };
   let fail = false;
+  let failureCode = 'failed';
   const calls: { url: string; method: string; body: unknown }[] = [];
   vi.stubGlobal(
     'fetch',
@@ -51,7 +52,7 @@ function mockApi(initial?: Account) {
         : undefined;
       calls.push({ url: input, method: init?.method ?? 'GET', body });
       if (fail)
-        return new Response(JSON.stringify({ code: 'failed' }), {
+        return new Response(JSON.stringify({ code: failureCode }), {
           status: 503,
         });
       expect((init?.headers as Record<string, string>).Authorization).toBe(
@@ -75,8 +76,9 @@ function mockApi(initial?: Account) {
   return {
     calls,
     getAccount: () => account,
-    setFail: (value: boolean) => {
+    setFail: (value: boolean, code = 'failed') => {
       fail = value;
+      failureCode = code;
     },
   };
 }
@@ -89,6 +91,21 @@ function mount(driver: AuthDriver, path = '/login') {
 }
 afterEach(() => vi.unstubAllGlobals());
 describe('Account flow with mocked Firebase identity and API', () => {
+  it('shows an actionable configuration error without exposing credentials', async () => {
+    const auth = new FakeAuth();
+    auth.user = { uid: 'account-test-user', displayName: 'Alex' };
+    const api = mockApi();
+    api.setFail(true, 'firebase-project-id-missing');
+    sessionStorage.setItem('flowcircle.mode', 'live');
+    mount(auth, '/home');
+    const error = await screen.findByRole('alert');
+    expect(error).toHaveTextContent(
+      'Im Server-Deployment fehlt FIREBASE_PROJECT_ID.',
+    );
+    expect(error).toHaveTextContent('Fehlercode: firebase-project-id-missing');
+    expect(error).not.toHaveTextContent('test-only-token');
+  });
+
   it('redirects signed-out live users to login', async () => {
     sessionStorage.setItem('flowcircle.mode', 'live');
     const auth = new FakeAuth();

@@ -12,6 +12,7 @@ import {
   type AuthIdentity,
 } from '../../data/firebase/auth';
 import { AccountClient } from '../../data/api/account';
+import { ApiRequestError } from '../../data/api/client';
 import type { Account } from '../../../shared/account';
 import { appConfig } from '../config';
 export type SessionMode = 'demo' | 'live';
@@ -22,6 +23,7 @@ interface Session {
   account: Account | null;
   client: AccountClient | null;
   configured: boolean;
+  errorCode: string | null;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   enterDemo: () => void;
@@ -29,6 +31,15 @@ interface Session {
   reload: () => Promise<void>;
 }
 const Context = createContext<Session | null>(null);
+function safeErrorCode(error: unknown) {
+  if (
+    error instanceof ApiRequestError &&
+    /^[a-z0-9-]{1,80}$/.test(error.error.code)
+  )
+    return error.error.code;
+  return 'account-unavailable';
+}
+
 function initialMode(): SessionMode {
   try {
     const stored = sessionStorage.getItem('flowcircle.mode');
@@ -56,6 +67,7 @@ export function SessionProvider({
   const [account, setAccount] = useState<Account | null>(null);
   const [client, setClient] = useState<AccountClient | null>(null);
   const generation = useRef(0);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   function chooseMode(value: SessionMode) {
     setMode(value);
     try {
@@ -73,6 +85,7 @@ export function SessionProvider({
         const attempt = ++generation.current;
         unsubscribeAccount?.();
         setIdentity(user);
+        setErrorCode(null);
         setAccount(null);
         setClient(null);
         if (!user) {
@@ -93,12 +106,18 @@ export function SessionProvider({
               setStatus('ready');
             }
           })
-          .catch(() => {
-            if (active && attempt === generation.current) setStatus('error');
+          .catch((error: unknown) => {
+            if (active && attempt === generation.current) {
+              setErrorCode(safeErrorCode(error));
+              setStatus('error');
+            }
           });
       },
       () => {
-        if (active) setStatus('error');
+        if (active) {
+          setErrorCode('auth-unavailable');
+          setStatus('error');
+        }
       },
     );
     return () => {
@@ -111,14 +130,18 @@ export function SessionProvider({
     if (!client) return;
     const attempt = generation.current;
     setStatus('loadingAccount');
+    setErrorCode(null);
     try {
       const value = await client.load();
       if (attempt === generation.current) {
         setAccount(value);
         setStatus('ready');
       }
-    } catch {
-      if (attempt === generation.current) setStatus('error');
+    } catch (error: unknown) {
+      if (attempt === generation.current) {
+        setErrorCode(safeErrorCode(error));
+        setStatus('error');
+      }
     }
   }
   return (
@@ -130,6 +153,7 @@ export function SessionProvider({
         account,
         client,
         configured: !!auth,
+        errorCode,
         async signIn() {
           if (!auth) throw Error('Firebase configuration missing');
           chooseMode('live');
@@ -139,6 +163,7 @@ export function SessionProvider({
           if (auth) await auth.signOut();
           ++generation.current;
           setIdentity(null);
+          setErrorCode(null);
           setAccount(null);
           setClient(null);
           setStatus('signedOut');

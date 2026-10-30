@@ -51,3 +51,7 @@ Live: Google-Anmeldung, Wiederherstellung durch Firebase, Abmeldung, eigenes Pro
 Demo: bisherige acht Programme, lokale Demo-Einstellungen und Beispiele. Der Live-Modus verwendet keine fiktiven Fortschritts-/Follower-/Circle-Daten. Öffentliche Profile, echte Programme, YouTube-Importe, Player und Social-Schreibaktionen bleiben spätere Aufgaben.
 
 Tokens werden nur über Firebase verwaltet und als Bearer-Header an die eigene API gesendet. Der App-Code schreibt Tokens nicht selbst in Local Storage oder Logs. Der Sessionmodus wird separat im Session Storage gespeichert. Echte Kontodaten werden im App-Code nicht lokal persistiert; Firebase selbst nutzt seine dokumentierte Browser-Authentifizierungspersistenz.
+
+## Konfigurationsfehler eingrenzen
+
+Die Kontoseite zeigt nur kontrollierte Fehlercodes und Handlungshinweise, niemals Credential-Inhalte. `firebase-project-id-missing`/`invalid` betrifft die serverseitige Projekt-ID; `firebase-service-account-json-invalid` ungültiges JSON; `firebase-service-account-fields-missing` eine unvollständige oder falsche Datei; `firebase-project-mismatch` unterschiedliche Projekte und `firebase-private-key-invalid` ein nicht lesbares RSA-Schlüsselformat. Formatprüfungen bestätigen noch keine aktiven Berechtigungen. Änderungen an Vercel-Variablen wirken erst in einem neuen Deployment; alte unveränderliche Deployment-URLs bleiben auf ihrem alten Stand.

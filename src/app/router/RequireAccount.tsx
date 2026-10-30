@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSession } from '../providers/SessionProvider';
+import { AccountAccessError } from '../../features/account/AccountAccessError';
 import { useI18n } from '../../i18n';
 import {
   Button,
@@ -27,10 +28,7 @@ export function RequireAccount() {
   if (session.status === 'error')
     return (
       <>
-        <ErrorState
-          description={t('account.unavailable')}
-          onRetry={() => void session.reload()}
-        />
+        <AccountAccessError />
         {logoutFailed && (
           <ErrorState inline description={t('auth.signOutFailed')} />
         )}

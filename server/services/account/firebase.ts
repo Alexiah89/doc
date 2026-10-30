@@ -6,6 +6,7 @@ import {
 } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
+import { readFirebaseConfig } from '../../config/firebase.js';
 import {
   accountSchema,
   newOnboarding,
@@ -17,14 +18,7 @@ import {
   type Identity,
 } from './contracts.js';
 function getAdmin() {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  if (!projectId)
-    throw new AccountError(
-      503,
-      'account-not-configured',
-      'account.unavailable',
-      true,
-    );
+  const { projectId, serviceAccount } = readFirebaseConfig();
   if (
     process.env.NODE_ENV === 'production' &&
     (process.env.FIREBASE_AUTH_EMULATOR_HOST ||
@@ -38,32 +32,14 @@ function getAdmin() {
   const existing = getApps().find((app) => app.name === 'flowcircle-server');
   if (existing) return existing;
   try {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    let credential = applicationDefault();
-    if (raw) {
-      const service: unknown = JSON.parse(raw);
-      if (
-        typeof service !== 'object' ||
-        !service ||
-        !('project_id' in service) ||
-        service.project_id !== projectId ||
-        !('client_email' in service) ||
-        typeof service.client_email !== 'string' ||
-        !('private_key' in service) ||
-        typeof service.private_key !== 'string'
-      )
-        throw Error('Invalid credential configuration');
-      credential = cert({
-        projectId,
-        clientEmail: service.client_email,
-        privateKey: service.private_key,
-      });
-    }
+    const credential = serviceAccount
+      ? cert(serviceAccount)
+      : applicationDefault();
     return initializeApp({ projectId, credential }, 'flowcircle-server');
   } catch {
     throw new AccountError(
       503,
-      'account-not-configured',
+      'firebase-admin-init-failed',
       'account.unavailable',
       true,
     );

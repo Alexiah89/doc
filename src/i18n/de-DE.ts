@@ -1,4 +1,18 @@
 export const de = {
+  'account.supportCode': 'Fehlercode: {code}',
+  'account.configProjectMissing':
+    'Im Server-Deployment fehlt FIREBASE_PROJECT_ID. Bitte den Eintrag für diese Vercel-Umgebung ergänzen und neu deployen.',
+  'account.configProjectInvalid':
+    'FIREBASE_PROJECT_ID enthält keine gültige Projekt-ID. Bitte den Wert in Vercel ohne zusätzliche Anführungszeichen prüfen.',
+  'account.configJsonInvalid':
+    'FIREBASE_SERVICE_ACCOUNT_JSON enthält kein gültiges JSON. Bitte den vollständigen Inhalt der heruntergeladenen Dienstkonto-Datei in Vercel hinterlegen.',
+  'account.configFieldsMissing':
+    'In FIREBASE_SERVICE_ACCOUNT_JSON fehlen Dienstkonto-Felder. Benötigt wird die vollständige Firebase-Admin-Dienstkonto-Datei, nicht die öffentliche Web-Konfiguration.',
+  'account.configProjectMismatch':
+    'Die Dienstkonto-Datei und FIREBASE_PROJECT_ID gehören nicht zum selben Firebase-Projekt. Bitte beide Einträge in Vercel abgleichen.',
+  'account.configPrivateKeyInvalid':
+    'Der private Schlüssel in der Dienstkonto-Datei kann nicht gelesen werden. Bitte den unveränderten Inhalt der vollständigen Originaldatei in Vercel hinterlegen.',
+
   'auth.configMissing':
     'Die Anmeldung ist noch nicht vollständig konfiguriert. Die Demo kannst du bereits ausprobieren.',
   'auth.separateDemo':
