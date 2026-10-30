@@ -87,3 +87,7 @@ Auth-only prüft echte SDK-Tokens und gefälschte Tokens. Die vollständige Suit
 Bei Fehlern nur Statuscode und JSON-Antwort des betroffenen Requests betrachten. Keine Authorization-Header, Tokens, Service-Account-JSON oder privaten Schlüssel in Issues/Chat kopieren. `account-not-configured`/Konfigurationsfehler erfordern eine Prüfung der branchbezogenen Serverbindung; HTML/NOT_FOUND bei Schreibpfaden weist auf ein falsches/altes Deployment hin. Alle neuen verschachtelten Pfade haben eigene Vercel-Adapter.
 
 Noch offene Abnahme: neue Vercel-Version, echtes Google Popup/Redirect, Firestore-Migration und Speicherung auf zwei Geräten; offizielle Firestore-Rules-/Transaktionstests nach freigegebenem Emulator-Download. Die frühere Produktionsversion wurde vom Nutzer als funktionierend bestätigt; diese Bestätigung ersetzt die neue Abnahme nicht.
+
+## Kompatibilität mit älteren Interessen-Editoren
+
+Ältere veröffentlichte Clients verwenden das Onboarding auch zum Bearbeiten von Interessen. Der Legacy-Endpunkt behandelt solche Änderungen bei bereits abgeschlossenem Konto atomar als Einstellungsänderungen: Interessen und Sichtbarkeit werden aktualisiert, der Abschluss bleibt erhalten, es entsteht kein neuer Draft und kein doppeltes Abschlussaudit. Die aktuelle UI verwendet weiterhin die Einstellungen. Für diesen Fix ist ein neues Deployment erforderlich; ein bereits veröffentlichter Build aktualisiert sich nicht automatisch durch einen Git-Push.

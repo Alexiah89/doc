@@ -198,6 +198,49 @@ describe('Persistent user architecture', () => {
     ])
       expect(serialized).not.toContain(forbidden);
   });
+  it('supports the legacy interests editor without reopening completed onboarding', async () => {
+    await service.bootstrap(alex);
+    await service.complete(alex, {
+      preferences: defaultPreferences(),
+      profileVisibility: 'private',
+    });
+    const before = await service.legacyRead(alex);
+    const result = await service.legacyUpdate(
+      alex,
+      before.revision,
+      (account) => ({
+        ...account,
+        onboarding: {
+          ...account.onboarding,
+          completed: false,
+          preferences: {
+            ...account.onboarding.preferences,
+            activities: ['Pilates'],
+          },
+          privacy: 'public',
+        },
+      }),
+    );
+    expect(result.onboarding).toMatchObject({
+      completed: true,
+      preferences: { activities: ['Pilates'] },
+      privacy: 'public',
+    });
+    const restored = await service.read(alex);
+    expect(restored.account.onboardingStatus).toBe('completed');
+    expect(restored.onboarding).toEqual({ currentStep: null, draft: null });
+    expect(restored.profile).toMatchObject({
+      interests: ['pilates'],
+      profileVisibility: 'public',
+    });
+    expect(db.count('auditLogs')).toBe(3);
+    await expect(
+      service.legacyUpdate(alex, before.revision, (account) => ({
+        ...account,
+        onboarding: { ...account.onboarding, privacy: 'private' },
+      })),
+    ).rejects.toMatchObject({ status: 409 });
+  });
   it('blocks suspended, deleted and deletion-pending accounts on reads and writes', async () => {
     await service.bootstrap(alex);
     for (const status of [

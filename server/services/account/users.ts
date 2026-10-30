@@ -513,6 +513,34 @@ export class UserAccountService {
     const current = toLegacyAccount(await this.read(identity));
     const next = accountSchema.parse(change(structuredClone(current)));
     if (
+      current.onboarding.completed &&
+      !isDeepStrictEqual(next.onboarding, current.onboarding)
+    ) {
+      // Older deployed clients reuse onboarding as the preferences editor.
+      // Preserve completion and apply those edits atomically as settings.
+      const preferences = canonicalPreferences(next.onboarding);
+      const profileVisibility = canonicalVisibility(next.onboarding.privacy);
+      return toLegacyAccount(
+        await this.change(
+          identity,
+          'preferences',
+          expectedRevision,
+          (user, profile) => ({
+            user: {
+              ...user,
+              preferences,
+              privacySettings: { ...user.privacySettings, profileVisibility },
+            },
+            profile: {
+              ...profile,
+              interests: preferences.activityTypes,
+              profileVisibility,
+            },
+          }),
+        ),
+      );
+    }
+    if (
       next.onboarding.completed &&
       !isDeepStrictEqual(next.onboarding, current.onboarding)
     ) {
