@@ -50,6 +50,7 @@ export function OnboardingPage() {
   const [failed, setFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [conflict, setConflict] = useState(false);
+  const [failureCode, setFailureCode] = useState<string | null>(null);
   const lock = useRef(false);
   const pending = useRef<OnboardingState | null>(null);
   async function persist(next: OnboardingState) {
@@ -62,6 +63,7 @@ export function OnboardingPage() {
       await settings.saveOnboarding(next);
       setState(next);
       setFailed(false);
+      setFailureCode(null);
       setConflict(false);
       pending.current = null;
       return true;
@@ -69,6 +71,12 @@ export function OnboardingPage() {
       const isConflict =
         error instanceof ApiRequestError &&
         error.error.code === 'account-conflict';
+      setFailureCode(
+        error instanceof ApiRequestError &&
+          /^[a-z0-9-]{1,80}$/.test(error.error.code)
+          ? error.error.code
+          : 'client-write-failed',
+      );
       setConflict(isConflict);
       setFailed(true);
       if (isConflict) {
@@ -239,13 +247,18 @@ export function OnboardingPage() {
           {failed && (
             <ErrorState
               inline
-              description={t(
-                conflict
-                  ? 'account.conflict'
-                  : session.mode === 'demo'
-                    ? 'common.saveError'
-                    : 'account.saveFailed',
-              )}
+              description={
+                t(
+                  conflict
+                    ? 'account.conflict'
+                    : session.mode === 'demo'
+                      ? 'common.saveError'
+                      : 'account.saveFailed',
+                ) +
+                (session.mode === 'live' && failureCode
+                  ? ` ${t('account.supportCode', { code: failureCode })}`
+                  : '')
+              }
               onRetry={() => {
                 if (pending.current) void persist(pending.current);
                 else {

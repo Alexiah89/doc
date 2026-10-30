@@ -18,6 +18,25 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
     'application/json'
   )
     throw new AccountError(415, 'invalid-content-type', 'account.invalidInput');
+  const declaredLength = Number(req.headers['content-length']);
+  if (Number.isFinite(declaredLength) && declaredLength > 8192)
+    throw new AccountError(413, 'body-too-large', 'account.invalidInput');
+  // Vercel's Node runtime parses application/json before invoking the handler.
+  // The stream is already consumed in that case; keep the raw Node server path too.
+  const parsed = (req as IncomingMessage & { body?: unknown }).body;
+  if (parsed !== undefined) {
+    let serialized: string | undefined;
+    try {
+      serialized = JSON.stringify(parsed);
+    } catch {
+      throw new AccountError(400, 'invalid-json', 'account.invalidInput');
+    }
+    if (serialized === undefined)
+      throw new AccountError(400, 'invalid-json', 'account.invalidInput');
+    if (Buffer.byteLength(serialized, 'utf8') > 8192)
+      throw new AccountError(413, 'body-too-large', 'account.invalidInput');
+    return parsed;
+  }
   let size = 0;
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
