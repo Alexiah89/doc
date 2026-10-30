@@ -40,7 +40,10 @@ export function SettingsPage() {
       <form onSubmit={submit} className="settings-form">
         <Card>
           <h2>{t('settings.account')}</h2>
-          <p>{t('auth.notice')}</p>
+          <p>{t('auth.demoAccountNotice')}</p>
+          <div className="actions">
+            <Link to="/login">{t('auth.google')}</Link>
+          </div>
           <Link to="/onboarding">{t('onboarding.edit')}</Link>
         </Card>
         <Card>

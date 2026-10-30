@@ -257,6 +257,32 @@ describe('Library and discovery', () => {
   });
 });
 describe('Product rules, settings and localization', () => {
+  it('explains demo account status and links to real sign-in without a stale sprint promise', async () => {
+    const user = userEvent.setup();
+    mount('/settings');
+    expect(
+      screen.getByText(
+        'Du nutzt den Demo-Modus. Für dein echtes Konto öffne die Google-Anmeldung.',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Anmeldung wird im nächsten Sprint/),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Mit Google anmelden' }));
+    expect(
+      screen.getByRole('heading', { name: 'Willkommen bei FlowCircle' }),
+    ).toBeInTheDocument();
+    await user.click(
+      screen.getByRole('button', { name: 'Mit Google anmelden' }),
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Die Anmeldung ist noch nicht vollständig konfiguriert.',
+    );
+    expect(
+      screen.queryByText(/Anmeldung wird im nächsten Sprint/),
+    ).not.toBeInTheDocument();
+  });
+
   it('uses Circles consistently and excludes out-of-scope product controls', async () => {
     mount('/profile');
     await screen.findByRole('heading', { name: 'Alex' });

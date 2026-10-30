@@ -9,7 +9,8 @@ export const en: Partial<Record<TranslationKey, string>> = {
   claim: 'Your YouTube programs. Your progress. Your Circles.',
   'auth.demo': 'Explore demo',
   'auth.google': 'Sign in with Google',
-  'auth.notice': 'Real sign-in will be enabled in the next sprint.',
+  'auth.demoAccountNotice':
+    'You are using demo mode. Open Google sign-in to access your real account.',
   'home.title': 'Good to see you.',
   'home.subtitle': 'A new day. A moment for yourself. At your own pace.',
   'home.next': 'Up next',

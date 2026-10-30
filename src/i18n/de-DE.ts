@@ -55,7 +55,8 @@ export const de = {
   'welcome.circles': 'Gemeinsam in Circles trainieren',
   'auth.google': 'Mit Google anmelden',
   'auth.demo': 'Demo ansehen',
-  'auth.notice': 'Die echte Anmeldung wird im nächsten Sprint aktiviert.',
+  'auth.demoAccountNotice':
+    'Du nutzt den Demo-Modus. Für dein echtes Konto öffne die Google-Anmeldung.',
   'auth.title': 'Willkommen bei FlowCircle',
   'nav.home': 'Home',
   'nav.discover': 'Entdecken',
