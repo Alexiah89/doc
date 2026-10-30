@@ -171,7 +171,7 @@ Die Clientversion kommt aus `package.json`; die Clientumgebung aus dem Vite-Modu
 }
 ```
 
-Die Health- und Import-Stubs rufen keine externen Dienste auf. Echte Kontorouten verifizieren Firebase-Tokens einschließlich Sperrung/Widerruf und verwenden Firestore über das Admin SDK. Antworten sind JSON mit `Cache-Control: no-store`; interne Exceptions werden nicht an Nutzer durchgereicht. Der Browser greift same-origin zu. Auf Vercel übernimmt `api/v1/[...path].ts` den Node-Handler. `vercel.json` stellt direkte SPA-Routen wieder her und schließt API-Pfade vom SPA-Fallback aus. Der lokale Vite-Preview-Server ist kein Ersatz für eine Vercel-Deployment-Prüfung.
+Die Health- und Import-Stubs rufen keine externen Dienste auf. Echte Kontorouten verifizieren Firebase-Tokens einschließlich Sperrung/Widerruf und verwenden Firestore über das Admin SDK. Antworten sind JSON mit `Cache-Control: no-store`; interne Exceptions werden nicht an Nutzer durchgereicht. Der Browser greift same-origin zu. Auf Vercel verweisen explizite Funktionsdateien für jede Route unter `api/v1/` auf denselben Node-Handler. Auch verschachtelte Schreibpfade (`me/onboarding.ts`, `me/profile.ts`) besitzen eigene Einstiegspunkte. `vercel.json` stellt direkte SPA-Routen wieder her und schließt API-Pfade vom SPA-Fallback aus. Der lokale Vite-Preview-Server ist kein Ersatz für eine Vercel-Deployment-Prüfung.
 
 ## Bekannte Einschränkungen
 

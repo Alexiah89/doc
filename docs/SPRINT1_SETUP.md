@@ -55,3 +55,7 @@ Tokens werden nur über Firebase verwaltet und als Bearer-Header an die eigene A
 ## Konfigurationsfehler eingrenzen
 
 Die Kontoseite zeigt nur kontrollierte Fehlercodes und Handlungshinweise, niemals Credential-Inhalte. `firebase-project-id-missing`/`invalid` betrifft die serverseitige Projekt-ID; `firebase-service-account-json-invalid` ungültiges JSON; `firebase-service-account-fields-missing` eine unvollständige oder falsche Datei; `firebase-project-mismatch` unterschiedliche Projekte und `firebase-private-key-invalid` ein nicht lesbares RSA-Schlüsselformat. Formatprüfungen bestätigen noch keine aktiven Berechtigungen. Änderungen an Vercel-Variablen wirken erst in einem neuen Deployment; alte unveränderliche Deployment-URLs bleiben auf ihrem alten Stand.
+
+## Vercel-Routing
+
+Jeder REST-Pfad hat eine explizite Node-Funktionsdatei unter `api/v1/`, einschließlich `me/onboarding.ts` und `me/profile.ts`. Die frühere Catch-all-Datei wurde ersetzt, nachdem die verschachtelte PUT-Anfrage in Preview eine Vercel-`NOT_FOUND`-Antwort lieferte. Alle Einstiegspunkte verwenden weiterhin denselben geschützten Handler. Lokale Entry-Point-Tests prüfen die vollständige Dateizuordnung und JSON-Authentifizierungsfehler; die tatsächliche Preview muss danach separat durch einen angemeldeten Speicherversuch abgenommen werden.
