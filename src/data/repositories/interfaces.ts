@@ -37,7 +37,7 @@ export interface SettingsRepository {
   getSettings(): DemoSettings;
   saveSettings(settings: DemoSettings): void;
   getOnboarding(): OnboardingState;
-  saveOnboarding(state: OnboardingState): void;
+  saveOnboarding(state: OnboardingState): void | Promise<void>;
 }
 export interface Repositories {
   auth: AuthRepository;

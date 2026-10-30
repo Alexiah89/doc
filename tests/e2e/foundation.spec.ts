@@ -184,3 +184,30 @@ test('production health and 501 stubs through the same-origin proxy', async ({
     });
   }
 });
+
+test('production account routes require login and keep demo entry explicit without Firebase config', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    sessionStorage.setItem('flowcircle.mode', 'live'),
+  );
+  await page.goto('http://127.0.0.1:4174/profile');
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(
+    page.getByRole('heading', { name: 'Willkommen bei FlowCircle' }),
+  ).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Anzeigename' })).toHaveCount(
+    0,
+  );
+  await page.getByRole('button', { name: 'Mit Google anmelden' }).click();
+  await expect(page.getByRole('alert')).toContainText(
+    'Die Anmeldung ist noch nicht vollständig konfiguriert.',
+  );
+  await page.getByRole('button', { name: 'Demo ansehen' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Was möchtest du gerne machen?' }),
+  ).toBeVisible();
+  await expect(
+    page.getByText('Demo · Beispieldaten', { exact: true }),
+  ).toBeVisible();
+});

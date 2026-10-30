@@ -20,9 +20,9 @@ describe('App and navigation', () => {
     try {
       appConfig.demoMode = false;
       mount('/home');
-      expect(screen.getByRole('alert')).toHaveTextContent(
-        'Echte Dienste sind in Sprint 0 noch nicht implementiert.',
-      );
+      expect(
+        screen.getByRole('heading', { name: 'Willkommen bei FlowCircle' }),
+      ).toBeInTheDocument();
       expect(
         screen.queryByRole('button', { name: 'Training starten' }),
       ).not.toBeInTheDocument();
@@ -41,8 +41,8 @@ describe('App and navigation', () => {
     await user.click(
       screen.getByRole('button', { name: 'Mit Google anmelden' }),
     );
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Die echte Anmeldung wird im nächsten Sprint aktiviert.',
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Die Anmeldung ist noch nicht vollständig konfiguriert.',
     );
     expect(
       screen.queryByText(/erfolgreich angemeldet/i),

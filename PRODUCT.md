@@ -24,4 +24,8 @@ Responsive React-/TypeScript-Web-App; langfristig optional Kotlin/Compose-Client
 
 Technische und visuelle Grundlage mit Routing, Designsystem, typisierten Demo-Repositories, lokalem Demo-Onboarding, i18n, API-Health und bewusst nicht implementierten Import-Stubs. Fiktive Personen und Programme, keine echten Integrationen oder Social-Aktionen. Der bisherige lokale Demo-Sessionabschluss wird bewusst entfernt, da Sessionabschlüsse nicht Teil dieses Sprints sind.
 
-Sprint 1 ist separat: Firebase Authentication, echtes Nutzerkonto, persistentes Onboarding und geschützte Routen. Nicht automatisch beginnen.
+## Sprint 1 – Konto und Onboarding
+
+Nach der vom Nutzer beauftragten Firebase-Einrichtung sind Firebase Auth, geschützte Kontoseiten und eine serverseitige Firestore-Anbindung vorbereitet. Der Nutzer hat Google-Anmeldung, Produktionsdomain, Web-Konfiguration und die Standarddatenbank eingerichtet. Für die Live-Abnahme fehlen noch die sichere Serverbindung und ein echter Google-/Firestore-Test. Siehe `docs/SPRINT1_SETUP.md`.
+
+Die Demo bleibt unabhängig; ihre Daten werden niemals automatisch ins echte Konto übernommen. Kontodaten werden über geschützte REST-Endpunkte geladen/geschrieben, die UID kommt ausschließlich aus dem verifizierten Token. Direkte Firestore-Clientzugriffe bleiben gesperrt. Spätere Programme, Player und Social-Funktionen werden nicht vorgezogen.

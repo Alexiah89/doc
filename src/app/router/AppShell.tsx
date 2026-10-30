@@ -11,6 +11,7 @@ import {
 import { useEffect } from 'react';
 import { useI18n, type TranslationKey } from '../../i18n';
 import { useOnline } from '../../hooks/useOnline';
+import { useSession } from '../providers/SessionProvider';
 export const mainRoutes: [string, TranslationKey, typeof Home][] = [
   ['/home', 'nav.home', Home],
   ['/discover', 'nav.discover', Compass],
@@ -21,6 +22,7 @@ export const mainRoutes: [string, TranslationKey, typeof Home][] = [
 export function AppShell() {
   const { t, locale } = useI18n();
   const online = useOnline();
+  const session = useSession();
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
@@ -64,7 +66,9 @@ export function AppShell() {
           <Link to="/settings" aria-label={t('nav.settings')}>
             <Settings size={20} />
           </Link>
-          <span className="badge">{t('demo.badge')}</span>
+          <span className="badge">
+            {t(session.mode === 'demo' ? 'demo.badge' : 'account.badge')}
+          </span>
         </header>
         <main id="main-content" tabIndex={-1}>
           {!online && (

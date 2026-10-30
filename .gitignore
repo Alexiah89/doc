@@ -8,3 +8,5 @@ dist-server/
 coverage/
 playwright-report/
 test-results/
+*-firebase-adminsdk-*.json
+service-account*.json

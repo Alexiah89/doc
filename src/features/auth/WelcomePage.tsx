@@ -1,32 +1,87 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Flower2 } from 'lucide-react';
-import { useI18n } from '../../i18n';
+import { useI18n, type TranslationKey } from '../../i18n';
 import {
   Button,
   Card,
   ErrorState,
+  LoadingState,
   PageHeader,
 } from '../../design-system/components';
 import { useRepositories } from '../../app/providers/RepositoryProvider';
+import { useSession } from '../../app/providers/SessionProvider';
 export function WelcomePage({ login = false }: { login?: boolean }) {
   const { t } = useI18n();
-  const [notice, setNotice] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const session = useSession();
   const { auth, settings } = useRepositories();
   const navigate = useNavigate();
-  async function start() {
+  const location = useLocation();
+  const [error, setError] = useState<TranslationKey | null>(null);
+  const [loading, setLoading] = useState(false);
+  async function startDemo() {
+    session.enterDemo();
+    if (session.mode === 'demo') {
+      try {
+        await auth.startDemo();
+        navigate(settings.getOnboarding().completed ? '/home' : '/onboarding');
+      } catch {
+        setError('common.errorDescription');
+      }
+    } else navigate('/onboarding');
+  }
+  async function signIn() {
+    setError(null);
+    if (!session.configured) {
+      setError('auth.configMissing');
+      return;
+    }
     setLoading(true);
-    setFailed(false);
     try {
-      await auth.startDemo();
-      navigate(settings.getOnboarding().completed ? '/home' : '/onboarding');
-    } catch {
-      setFailed(true);
+      await session.signIn();
+    } catch (cause) {
+      const code =
+        typeof cause === 'object' && cause && 'code' in cause
+          ? String(cause.code)
+          : '';
+      setError(
+        code === 'auth/popup-blocked'
+          ? 'auth.popupBlocked'
+          : code === 'auth/popup-closed-by-user' ||
+              code === 'auth/cancelled-popup-request'
+            ? 'auth.cancelled'
+            : 'auth.failed',
+      );
     } finally {
       setLoading(false);
     }
+  }
+  if (
+    session.mode === 'live' &&
+    session.status === 'ready' &&
+    session.account
+  ) {
+    const from: unknown = location.state?.from;
+    const allowed = [
+      '/home',
+      '/profile',
+      '/settings',
+      '/library',
+      '/circles',
+      '/discover',
+    ];
+    return (
+      <Navigate
+        replace
+        to={
+          session.account.onboarding.completed
+            ? typeof from === 'string' && allowed.includes(from)
+              ? from
+              : '/home'
+            : '/onboarding'
+        }
+      />
+    );
   }
   return (
     <section className="welcome">
@@ -49,22 +104,32 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
         ))}
       </div>
       <div className="actions">
-        <Button onClick={() => setNotice(true)}>{t('auth.google')}</Button>
         <Button
-          variant="secondary"
-          loading={loading}
-          onClick={() => void start()}
+          loading={
+            loading ||
+            (session.mode === 'live' &&
+              (session.status === 'initializing' ||
+                session.status === 'loadingAccount'))
+          }
+          onClick={() => void signIn()}
         >
+          {t('auth.google')}
+        </Button>
+        <Button variant="secondary" onClick={() => void startDemo()}>
           {t('auth.demo')}
         </Button>
       </div>
-      {notice && (
-        <p role="status" className="notice">
-          {t('auth.notice')}
-        </p>
+      {error && <ErrorState inline description={t(error)} />}{' '}
+      {session.mode === 'live' && session.status === 'error' && (
+        <ErrorState
+          description={t('account.unavailable')}
+          onRetry={() => void session.reload()}
+        />
+      )}{' '}
+      {session.mode === 'live' && session.status === 'loadingAccount' && (
+        <LoadingState />
       )}
-      {failed && <ErrorState onRetry={() => void start()} />}
-      <p className="muted">{t('demo.notice')}</p>
+      <p className="muted">{t('auth.separateDemo')}</p>
       <Link to="/home">{t('nav.home')}</Link>
     </section>
   );

@@ -1,4 +1,50 @@
 export const de = {
+  'auth.configMissing':
+    'Die Anmeldung ist noch nicht vollständig konfiguriert. Die Demo kannst du bereits ausprobieren.',
+  'auth.separateDemo':
+    'Die Demo ist unabhängig von deinem echten Konto. Demo-Auswahl und Beispieldaten werden nicht automatisch in dein Konto übernommen.',
+  'auth.failed':
+    'Die Google-Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.',
+  'auth.cancelled':
+    'Die Anmeldung wurde abgebrochen. Du kannst es erneut versuchen.',
+  'auth.popupBlocked':
+    'Bitte erlaube das Anmeldefenster für diese Website und versuche es erneut.',
+  'auth.signOut': 'Abmelden',
+  'auth.signOutFailed':
+    'Die Abmeldung ist fehlgeschlagen. Bitte versuche es erneut.',
+  'auth.loginRequired': 'Bitte melde dich an, um dein Konto zu öffnen.',
+  'auth.sessionExpired':
+    'Deine Anmeldung ist abgelaufen. Bitte melde dich erneut an.',
+  'account.badge': 'Dein Konto',
+  'account.welcome': 'Schön, dass du da bist, {name}.',
+  'account.connected': 'Dein echtes FlowCircle-Konto.',
+  'account.realProfile': 'Dein Profil und deine gespeicherten Interessen.',
+  'account.onboardingSaved': 'Deine Auswahl ist gespeichert.',
+  'account.savedDescription':
+    'Dein Onboarding ist mit deinem Konto verknüpft und nach der Anmeldung auch auf anderen Geräten verfügbar.',
+  'account.onboardingSynced':
+    'Deine Auswahl wird sicher in deinem Konto gespeichert. Private Voreinstellungen bleiben erhalten.',
+  'account.finishOnboarding': 'Onboarding abschließen',
+  'account.editOnboarding': 'Meine Trainingsinteressen bearbeiten',
+  'account.noPrograms': 'Platz für deinen ersten Flow.',
+  'account.programsLater':
+    'Echte Trainingsprogramme, Playlist-Importe und Circles folgen später. Du kannst sie im getrennten Demo-Modus ansehen.',
+  'account.socialLater':
+    'Öffentliche Profile und Social-Funktionen sind noch nicht aktiviert.',
+  'account.noAutomaticSharing':
+    'Deine Auswahl wird nicht automatisch veröffentlicht. Öffentliche Profile und das Teilen mit Followern folgen später.',
+  'account.displayName': 'Anzeigename',
+  'account.bio': 'Über mich',
+  'account.save': 'Profil speichern',
+  'account.saved': 'Dein Profil wurde in deinem Konto gespeichert.',
+  'account.saveFailed':
+    'Deine Änderungen konnten nicht gespeichert werden. Bitte versuche es erneut.',
+  'account.unavailable':
+    'Dein Konto konnte gerade nicht geladen werden. Bitte versuche es erneut. Falls der Fehler bleibt, muss die Server-Konfiguration geprüft werden.',
+  'account.conflict':
+    'Dein Konto wurde auf einem anderen Gerät geändert. Die aktuellen Daten wurden neu geladen. Bitte prüfe deine Auswahl und ändere sie bei Bedarf erneut.',
+  'account.invalidInput': 'Bitte überprüfe deine Eingaben.',
+
   brand: 'flowcircle.',
   tagline: 'Dein Raum für Bewegung',
   claim: 'Deine YouTube-Programme. Dein Fortschritt. Deine Circles.',

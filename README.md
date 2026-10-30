@@ -4,13 +4,15 @@ FlowCircle organisiert öffentliche YouTube-Playlists als Trainingsprogramme und
 
 ## Aktueller Sprint
 
-**Sprint 0 – Foundation.** Ausschließlich fiktive Demo-Inhalte und lokale Einstellungen, keine echten Produktintegrationen. Der ursprüngliche React-/Vite-Stack und die natürliche Gestaltung wurden weiterverwendet, die monolithische App in klar getrennte Verantwortlichkeiten aufgeteilt. Der frühere lokale Sessionabschluss wurde entsprechend der Sprint-0-Abgrenzung entfernt.
+**Sprint 1 – Firebase-Konto und persistentes Onboarding (Code vorbereitet, Live-Abnahme ausstehend).** Echte Google-Anmeldung, Abmeldung, geschützte Routen sowie serverseitige Konten-/Onboarding-Endpunkte sind ergänzt. Für die Aktivierung ist zusätzlich eine sichere Serverbindung in Vercel erforderlich. Die Einrichtung und der notwendige Live-Test sind in [docs/SPRINT1_SETUP.md](docs/SPRINT1_SETUP.md) dokumentiert.
+
+Die ursprüngliche **Sprint-0-Foundation** bleibt als getrennter Demo-Modus verfügbar. Im Demo-Modus ausschließlich fiktive Inhalte und lokale Einstellungen. Der ursprüngliche React-/Vite-Stack und die natürliche Gestaltung wurden weiterverwendet, die monolithische App in klar getrennte Verantwortlichkeiten aufgeteilt. Der frühere lokale Sessionabschluss wurde entsprechend der Sprint-0-Abgrenzung entfernt.
 
 ## Voraussetzungen und Installation
 
 - Node.js **24** (einschließlich `--env-file-if-exists`) und npm **11**
 - Für Browser-Tests: Chromium über Playwright oder einen vorhandenen Browser
-- Keine Firebase-Projekte, YouTube-Schlüssel oder anderen Secrets erforderlich
+- Für die Demo keine Firebase-Zugänge erforderlich; für echte Konten siehe [Sprint-1-Setup](docs/SPRINT1_SETUP.md). Keine YouTube-Schlüssel erforderlich.
 
 ```sh
 npm ci
@@ -70,24 +72,28 @@ CHROMIUM_PATH=/usr/bin/chromium npm run test:e2e
 
 Playwright startet isolierte Web-/Vorschau-Server auf 5174/4174 sowie die API auf 3001 und beendet sie nach dem Lauf. Diese Ports vorher freihalten. Die Prüfungen umfassen echte responsive Navigation, Touch-Ziele, Direktaufrufe, Reload-Persistenz, Tastaturbedienung, reduzierte Bewegung, schmales Reflow-Layout und den Development-/Production-Unterschied. Ein 320px-Reflow-Test entspricht der verfügbaren Layoutbreite bei 200 % Zoom eines 640px-Fensters; er ersetzt keine vollständige Browser-/Screenreader-Matrix. Browser-Artefakte liegen ignoriert in `test-results/`.
 
-## Demo-Modus und Speicherung
+## Kontomodus, Demo-Modus und Speicherung
 
-`VITE_DEMO_MODE=true` ist der Standard, auch ohne `.env`. `RepositoryProvider` wählt zentral die Demo-Implementierungen aus. `false` zeigt einen eindeutigen Hinweis, dass echte Dienste fehlen; es wird kein funktionierender Live-Modus simuliert.
+`VITE_DEMO_MODE=true` ist ohne `.env` der anfängliche Demo-Modus. `false` wählt zunächst den Kontomodus. Der explizite Demo-Einstieg bleibt verfügbar; die Auswahl wird im Session Storage gespeichert. `SessionProvider` verwaltet Firebase-Identität und API-Konto getrennt von Demo-Daten, `RepositoryProvider` wählt zentral die passenden Implementierungen aus. Unangemeldete Kontobesucher werden zu `/login` geleitet. Fehlende Konfiguration wird verständlich angezeigt.
+
+Echte Anmeldung: vier öffentliche `VITE_FIREBASE_*`-Variablen, serverseitiges `FIREBASE_PROJECT_ID` sowie `FIREBASE_SERVICE_ACCOUNT_JSON` oder geeignete ADC. Profile und Onboarding werden ausschließlich über `/api/v1/me` geladen/gespeichert. `shared/account.ts` enthält strikte Schemas, serverseitige Revisionen verhindern verlorene parallele Änderungen. Firestore-Regeln sperren direkte Clientzugriffe. Echte Konten zeigen keine fiktiven Trainingsdaten; Interessen und Profil stammen aus dem eigenen Konto.
 
 - Welcome → „Demo ansehen“ startet das lokale Onboarding; nach dessen Abschluss führt derselbe Button zu Home.
-- `DemoAuthRepository` liefert eine ausdrücklich fiktive Person; `getCurrentUser()` bleibt `null`. Ein echtes Login wird nie vorgetäuscht.
-- Onboarding (Schritt, Auswahl, Abschluss und private Voreinstellung) sowie Einstellungen werden unter `flowcircle.demo.v1.*` im Local Storage gespeichert. Fehler und ungültige Daten werden behandelt.
+- `DemoAuthRepository` liefert ausschließlich eine fiktive Demo-Person; `getCurrentUser()` bleibt dort `null`. Der separate Google-Button nutzt das offizielle Firebase Auth SDK. Ohne Konfiguration gibt es keinen Fake-Login.
+- Demo-Onboarding (Schritt, Auswahl, Abschluss und private Voreinstellung) sowie Demo-Einstellungen werden unter `flowcircle.demo.v1.*` im Local Storage gespeichert. Fehler und ungültige Daten werden behandelt.
 - Die Demo-Bibliothek ist im Arbeitsspeicher. Speichern/Entfernen über Entdecken bleibt nur innerhalb der aktuellen Sitzung erhalten; beim Neuladen erscheint die Ausgangs-Demo wieder.
 - Programmfortschritt, Reviews, Circles und Aktivitäten sind unveränderliche Beispieldarstellungen. Es gibt keine Sessionabschluss-, Schreib- oder Social-Aktionen.
-- Kein API-Key und kein echtes Konto werden gespeichert. Private Notizen sind immer privat; es werden keine Notizen erfasst.
+- In der Demo wird kein API-Key und kein echtes Konto gespeichert. Private Notizen sind immer privat; es werden keine Notizen erfasst.
 - Sprache: Deutsch vollständig und standardmäßig, Englisch teilweise mit deutschem Fallback. Fiktive Inhaltstexte wie Programmtitel und Beiträge werden nicht übersetzt.
 
 ## Routen
 
+Die folgenden Inhaltsangaben beschreiben den Demo-Modus. Im Kontomodus sind persönliche Routen geschützt, Home/Profil/Einstellungen zeigen echte Kontodaten und die übrigen Bereiche einen ehrlichen Entwicklungszustand.
+
 | Route         | Inhalt                                                                                      |
 | ------------- | ------------------------------------------------------------------------------------------- |
 | `/`           | Welcome, Vorteile, Anmeldungshinweis, Demo-Einstieg                                         |
-| `/login`      | Ehrlicher Platzhalter für spätere echte Anmeldung                                           |
+| `/login`      | Google-Anmeldung mit Konfigurations-/Fehlerhinweisen                                        |
 | `/onboarding` | Vier lokal persistierte Schritte, zurück/überspringen/abschließen                           |
 | `/home`       | „Als Nächstes“, Inner Awakening, Session 8/30, 27 %, Woche, Programme, Circles              |
 | `/discover`   | Suche nur in Beispielprogrammen/Creatorn, Kategorien, redaktionelle Bereiche, Importhinweis |
@@ -141,11 +147,11 @@ Siehe `.env.example`; keine echten Werte einchecken.
 | ---------------- | ----------------------------- | ------------------------------------------------------------------ |
 | `APP_ENV`        | `NODE_ENV` oder `development` | API-Umgebung                                                       |
 | `APP_VERSION`    | `0.1.0`                       | API-Version                                                        |
-| `VITE_DEMO_MODE` | `true`                        | Zentrale Client-Auswahl; Vite-Buildzeit                            |
+| `VITE_DEMO_MODE` | `true`                        | Anfänglicher UI-Modus; Vite-Buildzeit                              |
 | `PORT`           | `3001`                        | Optionaler lokaler API-Port; bei Änderung auch Vite-Proxy anpassen |
 | `CHROMIUM_PATH`  | Playwright-Browser            | Optionaler Browserpfad nur für Tests                               |
 
-Die Clientversion kommt aus `package.json`; die Clientumgebung aus dem Vite-Modus. Firebase-Konfiguration ist lediglich kommentiert vorbereitet. Es gibt keine aktive Firebase- oder YouTube-Konfiguration.
+Die Clientversion kommt aus `package.json`; die Clientumgebung aus dem Vite-Modus. `.env.example` enthält die öffentlichen Firebase-Web-Felder und getrennte serverseitige Bindungen. Werte bleiben außerhalb des Repositories. `FIREBASE_SERVICE_ACCOUNT_JSON` darf niemals einen `VITE_`-Präfix erhalten. Eine YouTube-Konfiguration ist weiterhin nicht enthalten.
 
 ## API-Grundlage
 
@@ -165,18 +171,30 @@ Die Clientversion kommt aus `package.json`; die Clientumgebung aus dem Vite-Modu
 }
 ```
 
-Keine externen Dienste werden aufgerufen. Antworten sind JSON mit `Cache-Control: no-store`; interne Exceptions werden nicht an Nutzer durchgereicht. Der Browser greift same-origin zu. Auf Vercel übernimmt `api/v1/[...path].ts` den Node-Handler. `vercel.json` stellt direkte SPA-Routen wieder her und schließt API-Pfade vom SPA-Fallback aus. Der lokale Vite-Preview-Server ist kein Ersatz für eine Vercel-Deployment-Prüfung.
+Die Health- und Import-Stubs rufen keine externen Dienste auf. Echte Kontorouten verifizieren Firebase-Tokens einschließlich Sperrung/Widerruf und verwenden Firestore über das Admin SDK. Antworten sind JSON mit `Cache-Control: no-store`; interne Exceptions werden nicht an Nutzer durchgereicht. Der Browser greift same-origin zu. Auf Vercel übernimmt `api/v1/[...path].ts` den Node-Handler. `vercel.json` stellt direkte SPA-Routen wieder her und schließt API-Pfade vom SPA-Fallback aus. Der lokale Vite-Preview-Server ist kein Ersatz für eine Vercel-Deployment-Prüfung.
 
 ## Bekannte Einschränkungen
 
 - Fiktive, nicht mit realen YouTube-Playlists verknüpfte Inhalte; keine Partnerschaften mit Creatorn.
-- Kein echtes Login, keine geschützten Kontorouten, keine Firestore-Persistenz.
+- Echte Auth-/Firestore-Adapter sind implementiert; der konkrete Zugriff auf das Nutzerprojekt muss nach sicherer Serverkonfiguration noch live abgenommen werden.
 - Kein Player, Import, Sessionabschluss, echter Fortschritt oder Social-Schreibaktionen.
 - Englische Texte teilweise auf Deutsch zurückfallend.
 - Nur helle Darstellung in Sprint 0. „System“ speichert die Präferenz, verwendet derzeit ebenfalls das helle Design.
 - Keine installierbare PWA und keine garantierte Offline-Verfügbarkeit; nur ein verständlicher Offline-Hinweis.
 - Browser-Tests laufen in Chromium; Safari, Firefox und vollständige assistive-Technologie-Tests sind nicht enthalten.
 
-## Nächster Sprint
+## Geschützte Account-API
 
-**Sprint 1 – Firebase Authentication, echtes Nutzerkonto, persistentes Onboarding und geschützte Routen.** Separate Aufgabe; nicht Bestandteil von Sprint 0.
+- `GET /api/v1/me`: eigenes Konto laden oder beim ersten Login transaktional anlegen.
+- `PUT /api/v1/me/onboarding`: strikt validiertes Onboarding mit `expectedRevision`.
+- `PATCH /api/v1/me/profile`: Anzeigename und Bio mit `expectedRevision`.
+- Fehlender/ungültiger Token: 401. Ungültige Eingaben: 400, zu große Nutzlast: 413, falscher Content-Type: 415, veraltete Revision: 409. Antworten enthalten keine internen Stacktraces.
+- Die UID stammt ausschließlich aus dem serverseitig verifizierten Token. Öffentliche Projektionen und direkte Firestore-Schreibzugriffe werden nicht eingeführt.
+
+## Validierungsgrenzen
+
+Vitest deckt Demo-Regressionen, Konto-UI, API-Zugriff und Firebase-Adapter ab. Authentifizierte UI-/API-Tests und SDK-Adaptertests verwenden explizite Testdoubles; es wird dabei kein echter Google-Login und kein reales Firestore durchgeführt. Playwright prüft weiterhin die Demo auf Chromium einschließlich Production-Routen. Für Live-Abnahme und zweites Gerät siehe das Setup-Dokument.
+
+## Nächste Stufe
+
+Zuerst den echten Login und die geräteübergreifende Speicherung mit der sicheren Vercel-Serverbindung abnehmen. Playlist-Import und Player bleiben separate spätere Aufgaben.

@@ -12,6 +12,14 @@ import { SettingsPage } from '../../features/settings/SettingsPage';
 import { LoadingState, PageHeader } from '../../design-system/components';
 import { useI18n } from '../../i18n';
 import { appConfig } from '../config';
+import { RequireAccount } from './RequireAccount';
+import { useSession } from '../providers/SessionProvider';
+import {
+  AccountHomePage,
+  AccountProfilePage,
+  AccountSettingsPage,
+  AccountPendingPage,
+} from '../../features/account/AccountPages';
 const DevPage = import.meta.env.DEV
   ? lazy(() => import('../../features/dev/DevPage'))
   : null;
@@ -32,19 +40,59 @@ export function AppRoutes({
 }: {
   development?: boolean;
 }) {
+  const { mode } = useSession();
+  const demo = mode === 'demo';
   return (
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<WelcomePage login />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/discover" element={<DiscoverPage />} />
-        <Route path="/library" element={<LibraryPage />} />
-        <Route path="/circles" element={<CirclesPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        {development && DevPage && (
+        <Route element={<RequireAccount />}>
+          <Route path="/onboarding" element={<OnboardingPage />} />
+          <Route
+            path="/home"
+            element={demo ? <HomePage /> : <AccountHomePage />}
+          />
+          <Route
+            path="/discover"
+            element={
+              demo ? (
+                <DiscoverPage />
+              ) : (
+                <AccountPendingPage title="nav.discover" />
+              )
+            }
+          />
+          <Route
+            path="/library"
+            element={
+              demo ? (
+                <LibraryPage />
+              ) : (
+                <AccountPendingPage title="nav.library" />
+              )
+            }
+          />
+          <Route
+            path="/circles"
+            element={
+              demo ? (
+                <CirclesPage />
+              ) : (
+                <AccountPendingPage title="nav.circles" />
+              )
+            }
+          />
+          <Route
+            path="/profile"
+            element={demo ? <ProfilePage /> : <AccountProfilePage />}
+          />
+          <Route
+            path="/settings"
+            element={demo ? <SettingsPage /> : <AccountSettingsPage />}
+          />
+        </Route>
+        {development && demo && DevPage && (
           <Route
             path="/dev/demo"
             element={
