@@ -1,4 +1,11 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import { unconfiguredAuthRepository } from '../../data/firebase/FirebaseAuthRepository';
 import { createDemoRepositories } from '../../data/demo/repositories';
 import { createAccountRepositories } from '../../data/repositories/account';
 import type { Repositories } from '../../data/repositories/interfaces';
@@ -13,25 +20,18 @@ export function RepositoryProvider({
 }) {
   const session = useSession();
   const { mode, client, identity } = session;
+  const [demo] = useState(createDemoRepositories);
   const value = useMemo(
     () =>
       repositories ??
       (mode === 'demo'
-        ? createDemoRepositories()
-        : createAccountRepositories(client, identity?.uid ?? 'guest', {
-            async getCurrentUser() {
-              if (!identity) return null;
-              return {
-                id: identity.uid,
-                displayName: identity.displayName,
-                username: `user_${identity.uid}`,
-              };
-            },
-            async startDemo() {
-              throw Error('Use the explicit demo entry');
-            },
-          })),
-    [repositories, mode, client, identity],
+        ? demo
+        : createAccountRepositories(
+            client,
+            identity?.uid ?? 'guest',
+            session.authRepository ?? unconfiguredAuthRepository,
+          )),
+    [repositories, mode, demo, client, identity, session.authRepository],
   );
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }

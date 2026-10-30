@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n';
 export function Button({
   variant = 'primary',
   loading = false,
+  loadingLabel,
   children,
   className = '',
   disabled,
@@ -11,6 +12,7 @@ export function Button({
 }: ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost' | 'destructive';
   loading?: boolean;
+  loadingLabel?: string;
 }) {
   const { t } = useI18n();
   return (
@@ -20,7 +22,7 @@ export function Button({
       aria-busy={loading || undefined}
       className={`button button-${variant} ${className}`}
     >
-      {loading ? t('common.loading') : children}
+      {loading ? (loadingLabel ?? t('common.loading')) : children}
     </button>
   );
 }
@@ -84,21 +86,31 @@ export function ProgressBar({
     </div>
   );
 }
-export function Avatar({ name }: { name: string }) {
+export function Avatar({
+  name,
+  photoUrl,
+}: {
+  name: string;
+  photoUrl?: string | null;
+}) {
   return (
     <span className="avatar" aria-label={name}>
-      {name.slice(0, 1)}
+      {photoUrl ? (
+        <img src={photoUrl} alt="" referrerPolicy="no-referrer" />
+      ) : (
+        name.slice(0, 1)
+      )}
     </span>
   );
 }
 export function Skeleton() {
   return <div className="skeleton" aria-hidden="true" />;
 }
-export function LoadingState() {
+export function LoadingState({ label }: { label?: string } = {}) {
   const { t } = useI18n();
   return (
     <div role="status">
-      <p>{t('common.loading')}</p>
+      <p>{label ?? t('common.loading')}</p>
       <Skeleton />
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useSession } from '../providers/SessionProvider';
+import { AccountStatusPage } from '../../features/account/AccountStatusPage';
 import { AccountAccessError } from '../../features/account/AccountAccessError';
 import { useI18n } from '../../i18n';
 import {
@@ -22,9 +23,23 @@ export function RequireAccount() {
   }
   if (session.mode === 'demo') return <Outlet />;
   if (session.status === 'initializing' || session.status === 'loadingAccount')
-    return <LoadingState />;
+    return (
+      <LoadingState
+        label={t(
+          session.status === 'initializing'
+            ? 'state.restore'
+            : 'state.accountLoading',
+        )}
+      />
+    );
   if (session.status === 'signedOut')
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  if (session.authState === 'account-suspended') return <AccountStatusPage />;
+  if (
+    session.account?.onboarding.completed &&
+    location.pathname === '/onboarding'
+  )
+    return <Navigate to="/home" replace />;
   if (session.status === 'error')
     return (
       <>

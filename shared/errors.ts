@@ -1,0 +1,16 @@
+export const accountErrorKeys = {
+  unauthenticated: 'errors.unauthenticated',
+  'invalid-auth-token': 'errors.invalid-auth-token',
+  'account-disabled': 'errors.account-disabled',
+  'account-suspended': 'errors.account-suspended',
+  'firebase-not-configured': 'errors.firebase-not-configured',
+  'backend-unavailable': 'errors.backend-unavailable',
+  'user-bootstrap-failed': 'errors.user-bootstrap-failed',
+  'username-reservation-failed': 'errors.username-reservation-failed',
+  'onboarding-invalid-step': 'errors.onboarding-invalid-step',
+  'onboarding-invalid-selection': 'errors.onboarding-invalid-selection',
+  'onboarding-save-failed': 'errors.onboarding-save-failed',
+  'validation-error': 'errors.validation-error',
+  'rate-limit-exceeded': 'errors.rate-limit-exceeded',
+  'internal-error': 'errors.internal-error',
+} as const;

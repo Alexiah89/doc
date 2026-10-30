@@ -2,6 +2,8 @@ import type { Account } from '../../../shared/account.js';
 export interface Identity {
   uid: string;
   name?: string;
+  photoUrl?: string;
+  emailVerified?: boolean;
 }
 export interface AccountStore {
   getOrCreate(identity: Identity): Promise<Account>;
@@ -12,6 +14,7 @@ export interface AccountStore {
   ): Promise<Account>;
 }
 export interface AccountServices {
+  users?: import('./users.js').UserAccountService;
   verifyToken(token: string): Promise<Identity>;
   store: AccountStore;
 }

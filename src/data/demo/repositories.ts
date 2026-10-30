@@ -77,6 +77,25 @@ function isSettings(x: unknown): x is DemoSettings {
 }
 const copy = <T>(x: T): T => structuredClone(x);
 export class DemoAuthRepository implements AuthRepository {
+  async signInWithGoogle(): Promise<import('../models').AuthUser> {
+    throw Error('Google sign-in is unavailable in demo mode');
+  }
+  async signOut() {}
+  async getIdToken() {
+    return null;
+  }
+  subscribeToAuthState(
+    callback: (user: import('../models').AuthUser | null) => void,
+  ) {
+    let active = true;
+    queueMicrotask(() => {
+      if (active) callback(null);
+    });
+    return () => {
+      active = false;
+    };
+  }
+
   async getCurrentUser() {
     return null;
   }

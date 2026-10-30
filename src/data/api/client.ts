@@ -1,5 +1,10 @@
 import type { ApiError } from '../models';
 export interface HealthResponse {
+  diagnostics?: {
+    firebaseAdminConfigured: boolean;
+    authEmulator: boolean;
+    firestoreEmulator: boolean;
+  };
   status: 'ok';
   environment: string;
   version: string;

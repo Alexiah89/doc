@@ -18,14 +18,22 @@ FlowCircle ist eine Social-Tracking-Anwendung für kostenlose Trainingsprogramme
 
 ## Architektur
 
-Responsive React-/TypeScript-Web-App; langfristig optional Kotlin/Compose-Client. Gemeinsames Node.js-REST-Backend unter `/api/v1`, später Firebase Authentication, Firestore und Firebase Admin. Sensible/globale Daten sind server-authoritative; keine direkten sensiblen Firestore-Schreibzugriffe im Client.
+Responsive React-/TypeScript-Web-App; langfristig optional Kotlin/Compose-Client. Gemeinsames Node.js-REST-Backend unter `/api/v1`, Firebase Authentication, Firestore und Firebase Admin. Sensible/globale Daten sind server-authoritative; keine direkten sensiblen Firestore-Schreibzugriffe im Client.
 
 ## Sprint 0 – Foundation
 
 Technische und visuelle Grundlage mit Routing, Designsystem, typisierten Demo-Repositories, lokalem Demo-Onboarding, i18n, API-Health und bewusst nicht implementierten Import-Stubs. Fiktive Personen und Programme, keine echten Integrationen oder Social-Aktionen. Der bisherige lokale Demo-Sessionabschluss wird bewusst entfernt, da Sessionabschlüsse nicht Teil dieses Sprints sind.
 
-## Sprint 1 – Konto und Onboarding
+## Sprint 1 – Deployment
 
-Nach der vom Nutzer beauftragten Firebase-Einrichtung sind Firebase Auth, geschützte Kontoseiten und eine serverseitige Firestore-Anbindung vorbereitet. Der Nutzer hat Google-Anmeldung, Produktionsdomain, Web-Konfiguration und die Standarddatenbank eingerichtet. Für die Live-Abnahme fehlen noch die sichere Serverbindung und ein echter Google-/Firestore-Test. Siehe `docs/SPRINT1_SETUP.md`.
+Die responsive Foundation wurde auf Vercel veröffentlicht und auf dem Handy geprüft. Die Sprintnummerierung folgt ab jetzt der verbindlichen Nutzervorgabe.
 
-Die Demo bleibt unabhängig; ihre Daten werden niemals automatisch ins echte Konto übernommen. Kontodaten werden über geschützte REST-Endpunkte geladen/geschrieben, die UID kommt ausschließlich aus dem verifizierten Token. Direkte Firestore-Clientzugriffe bleiben gesperrt. Spätere Programme, Player und Social-Funktionen werden nicht vorgezogen.
+## Sprint 2 – Authentifizierung, Nutzerkonto und persistentes Onboarding
+
+Die vom Nutzer bereits live bestätigte Google-Anmeldung und Speicherung werden um die getrennten Collections users, profiles, usernames und auditLogs, atomaren Bootstrap, wiederaufnehmbares Onboarding, sichere Status-/Routingregeln und echte Einstellungen erweitert. Bestehende Konten werden ohne Verlust des Onboardingstands übernommen. Demo und echte Konten bleiben getrennt; direkte Firestore-Clientzugriffe bleiben gesperrt.
+
+Code und lokale Tests sind vorbereitet. Die neue Version benötigt eine eigene Live-Abnahme; die Firestore-Emulatorprüfung ist in dieser Cloud durch den offiziellen Download (HTTP 403) blockiert. Siehe [Setup und Prüfschritte](docs/SPRINT2_SETUP.md). Die ältere Sprint-1-Setup-Datei ist historisch und beschreibt den vorigen Kontovertrag.
+
+## Sprint 3 – Öffentliche YouTube-Playlists
+
+Öffentliche Playlists prüfen, importieren und als FlowCircle-Programme speichern. Noch nicht begonnen. Player, Tracking und Social-Funktionen folgen separat; vorhandene Import-Stubs liefern weiterhin 501.

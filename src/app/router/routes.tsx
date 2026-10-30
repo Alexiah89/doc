@@ -92,7 +92,7 @@ export function AppRoutes({
             element={demo ? <SettingsPage /> : <AccountSettingsPage />}
           />
         </Route>
-        {development && demo && DevPage && (
+        {development && DevPage && (
           <Route
             path="/dev/demo"
             element={

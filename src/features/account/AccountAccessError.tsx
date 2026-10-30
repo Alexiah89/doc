@@ -1,7 +1,9 @@
+import { accountErrorKeys } from '../../../shared/errors';
 import { useSession } from '../../app/providers/SessionProvider';
 import { ErrorState } from '../../design-system/components';
 import { useI18n, type TranslationKey } from '../../i18n';
 const messages: Readonly<Record<string, TranslationKey>> = {
+  ...accountErrorKeys,
   'firebase-project-id-missing': 'account.configProjectMissing',
   'firebase-project-id-invalid': 'account.configProjectInvalid',
   'firebase-service-account-json-invalid': 'account.configJsonInvalid',

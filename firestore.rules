@@ -1,9 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Account documents are accessed only by the authenticated backend Admin SDK.
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /users/{userId} { allow read, write: if false; }
+    match /profiles/{userId} { allow read, write: if false; }
+    match /usernames/{username} { allow read, write: if false; }
+    match /auditLogs/{eventId} { allow read, write: if false; }
+    match /rateLimits/{limitId} { allow read, write: if false; }
+    // Legacy account snapshots remain private and are retained for migration.
+    match /{document=**} { allow read, write: if false; }
   }
 }

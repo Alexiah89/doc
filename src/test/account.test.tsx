@@ -5,6 +5,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../app/App';
 import type { AuthDriver, AuthIdentity } from '../data/firebase/auth';
 import { appConfig } from '../app/config';
+import {
+  canonicalPreferences,
+  legacyPreferences,
+  legacyVisibility,
+} from '../../shared/users';
 import { newOnboarding, type Account } from '../../shared/account';
 class FakeAuth implements AuthDriver {
   user: AuthIdentity | null = null;
@@ -58,13 +63,70 @@ function mockApi(initial?: Account) {
       expect((init?.headers as Record<string, string>).Authorization).toBe(
         'Bearer test-only-token',
       );
-      if (init?.method === 'PUT')
+      if (init?.method === 'PATCH' && input.endsWith('/onboarding'))
         account = {
           ...account,
-          onboarding: body!.onboarding as Account['onboarding'],
+          onboarding: {
+            step: Number(body!.currentStep) - 1,
+            completed: false,
+            preferences: legacyPreferences(
+              body!
+                .partialPreferences as import('../../shared/users').UserPreferences,
+            ),
+            privacy: legacyVisibility(
+              body!
+                .profileVisibility as import('../../shared/users').ProfileVisibility,
+            ),
+          },
           revision: account.revision + 1,
         };
-      if (init?.method === 'PATCH')
+      if (init?.method === 'POST' && input.endsWith('/complete'))
+        account = {
+          ...account,
+          onboarding: {
+            step: 3,
+            completed: true,
+            preferences: legacyPreferences(
+              body!.preferences as import('../../shared/users').UserPreferences,
+            ),
+            privacy: legacyVisibility(
+              body!
+                .profileVisibility as import('../../shared/users').ProfileVisibility,
+            ),
+          },
+          revision: account.revision + 1,
+        };
+      if (init?.method === 'PATCH' && input.endsWith('/preferences')) {
+        const { expectedRevision, locale, ...preferences } = body!;
+        expect(expectedRevision).toBe(account.revision);
+        account = {
+          ...account,
+          locale: locale as 'de-DE' | 'en-US',
+          onboarding: {
+            ...account.onboarding,
+            preferences: legacyPreferences({
+              ...canonicalPreferences(account.onboarding),
+              ...preferences,
+            }),
+          },
+          revision: account.revision + 1,
+        };
+      }
+      if (init?.method === 'PATCH' && input.endsWith('/privacy')) {
+        expect(body!.expectedRevision).toBe(account.revision);
+        account = {
+          ...account,
+          onboarding: {
+            ...account.onboarding,
+            privacy: legacyVisibility(
+              body!
+                .profileVisibility as import('../../shared/users').ProfileVisibility,
+            ),
+          },
+          revision: account.revision + 1,
+        };
+      }
+      if (init?.method === 'PATCH' && input.endsWith('/profile'))
         account = {
           ...account,
           ...(body!.profile as { displayName: string; bio: string }),
@@ -192,7 +254,11 @@ describe('Account flow with mocked Firebase identity and API', () => {
       'aria-pressed',
       'false',
     );
-    expect(api.calls.every((x) => x.method === 'GET')).toBe(true);
+    expect(
+      api.calls.every(
+        (x) => x.method === 'GET' || x.url.endsWith('/bootstrap'),
+      ),
+    ).toBe(true);
   });
   it('does not claim onboarding success when the API is unavailable', async () => {
     const auth = new FakeAuth();
@@ -245,6 +311,52 @@ describe('Account flow with mocked Firebase identity and API', () => {
       screen.queryByRole('textbox', { name: 'Anzeigename' }),
     ).not.toBeInTheDocument();
   });
+  it('saves real training preferences and privacy through separate APIs and restores them', async () => {
+    const auth = new FakeAuth();
+    auth.user = { uid: 'account-test-user', displayName: 'Alex' };
+    const api = mockApi({
+      uid: 'account-test-user',
+      displayName: 'Alex',
+      username: 'alex',
+      bio: '',
+      onboarding: { ...newOnboarding(), step: 3, completed: true },
+      revision: 2,
+      createdAt: '2026-10-30T00:00:00.000Z',
+      updatedAt: '2026-10-30T00:00:00.000Z',
+    });
+    sessionStorage.setItem('flowcircle.mode', 'live');
+    const user = userEvent.setup();
+    mount(auth, '/settings');
+    await user.click(await screen.findByRole('checkbox', { name: 'Yoga' }));
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Sessiondauer' }),
+      'under_15',
+    );
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Privatsphäre' }),
+      'protected',
+    );
+    await user.click(
+      screen.getByRole('button', {
+        name: 'Training und Privatsphäre speichern',
+      }),
+    );
+    await waitFor(() =>
+      expect(api.getAccount().onboarding).toMatchObject({
+        privacy: 'followers',
+        preferences: { activities: ['Yoga'], duration: 'short' },
+      }),
+    );
+    expect(
+      api.calls.filter((x) => x.method === 'PATCH').map((x) => x.url),
+    ).toEqual(['/api/v1/users/me/preferences', '/api/v1/users/me/privacy']);
+    cleanup();
+    mount(auth, '/settings');
+    expect(await screen.findByRole('checkbox', { name: 'Yoga' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Privatsphäre' })).toHaveValue(
+      'protected',
+    );
+  });
   it('keeps protected content hidden during initialization', async () => {
     const callbacks = new Set<(identity: AuthIdentity | null) => void>();
     const auth: AuthDriver = {
@@ -262,7 +374,9 @@ describe('Account flow with mocked Firebase identity and API', () => {
     };
     sessionStorage.setItem('flowcircle.mode', 'live');
     mount(auth, '/profile');
-    expect(screen.getByRole('status')).toHaveTextContent('Wird geladen');
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Deine Anmeldung wird wiederhergestellt',
+    );
     expect(
       screen.queryByRole('heading', { name: 'Profil', level: 1 }),
     ).not.toBeInTheDocument();

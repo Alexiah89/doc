@@ -12,35 +12,18 @@ import {
 import { useI18n } from '../../i18n';
 import { useSession } from '../../app/providers/SessionProvider';
 import { ApiRequestError } from '../../data/api/client';
-import type {
-  ActivityType,
-  OnboardingState,
-  Visibility,
-} from '../../data/models';
-export const durationOptions = [
-  'short',
-  'medium',
-  'long',
-  'extended',
-  'varied',
-] as const;
-export const frequencyOptions = [
-  'light',
-  'regular',
-  'often',
-  'daily',
-  'flexible',
-] as const;
-const priorityOptions = [
-  'flexibility',
-  'relaxation',
-  'back',
-  'strength',
-  'morning',
-  'evening',
-  'restart',
-  'consistency',
-] as const;
+import type { ActivityType, OnboardingState } from '../../data/models';
+import {
+  activityChoices,
+  durationChoices as durationOptions,
+  frequencyChoices as frequencyOptions,
+  focusChoices as priorityOptions,
+  privacyChoices,
+} from '../../../shared/onboardingChoices';
+export {
+  durationChoices as durationOptions,
+  frequencyChoices as frequencyOptions,
+} from '../../../shared/onboardingChoices';
 export function OnboardingPage() {
   const { settings } = useRepositories();
   const { t } = useI18n();
@@ -59,6 +42,7 @@ export function OnboardingPage() {
     setSaving(true);
     next = { ...next, completed: next.step === 3 && next.completed };
     pending.current = next;
+    if (next.step === state.step) setState(next);
     try {
       await settings.saveOnboarding(next);
       setState(next);
@@ -123,7 +107,15 @@ export function OnboardingPage() {
         )}
       />
       <Card>
-        <fieldset className="onboarding-fields" disabled={saving}>
+        <p role="status" className="sr-only">
+          {saving ? t('state.onboardingSaving') : ''}
+        </p>
+        <fieldset
+          aria-describedby={failed ? 'onboarding-error' : undefined}
+          aria-invalid={failed || undefined}
+          className="onboarding-fields"
+          disabled={saving}
+        >
           <p className="eyebrow">
             {t('onboarding.step', { current: state.step + 1 })}
           </p>
@@ -134,17 +126,15 @@ export function OnboardingPage() {
           <h2>{t(titles[state.step])}</h2>
           {state.step === 0 && (
             <div className="chips">
-              {(['Yoga', 'Pilates', 'Mobility', 'Stretching'] as const).map(
-                (value) => (
-                  <Chip
-                    key={value}
-                    selected={state.preferences.activities.includes(value)}
-                    onClick={() => toggleActivity(value)}
-                  >
-                    {t(`activity.${value}`)}
-                  </Chip>
-                ),
-              )}
+              {activityChoices.map((value) => (
+                <Chip
+                  key={value}
+                  selected={state.preferences.activities.includes(value)}
+                  onClick={() => toggleActivity(value)}
+                >
+                  {t(`activity.${value}`)}
+                </Chip>
+              ))}
             </div>
           )}
           {state.step === 1 && (
@@ -225,19 +215,17 @@ export function OnboardingPage() {
           {state.step === 3 && (
             <fieldset>
               <legend className="sr-only">{t('onboarding.privacy')}</legend>
-              {(['private', 'followers', 'public'] as Visibility[]).map(
-                (value) => (
-                  <label className="option" key={value}>
-                    <input
-                      type="radio"
-                      name="privacy"
-                      checked={state.privacy === value}
-                      onChange={() => persist({ ...state, privacy: value })}
-                    />
-                    {t(`privacy.${value}`)}
-                  </label>
-                ),
-              )}
+              {privacyChoices.map((value) => (
+                <label className="option" key={value}>
+                  <input
+                    type="radio"
+                    name="privacy"
+                    checked={state.privacy === value}
+                    onChange={() => persist({ ...state, privacy: value })}
+                  />
+                  {t(`privacy.${value}`)}
+                </label>
+              ))}
               <p className="notice">{t('privacy.notes')}</p>
               {session.mode === 'live' && (
                 <p>{t('account.noAutomaticSharing')}</p>
@@ -245,28 +233,30 @@ export function OnboardingPage() {
             </fieldset>
           )}
           {failed && (
-            <ErrorState
-              inline
-              description={
-                t(
-                  conflict
-                    ? 'account.conflict'
-                    : session.mode === 'demo'
-                      ? 'common.saveError'
-                      : 'account.saveFailed',
-                ) +
-                (session.mode === 'live' && failureCode
-                  ? ` ${t('account.supportCode', { code: failureCode })}`
-                  : '')
-              }
-              onRetry={() => {
-                if (pending.current) void persist(pending.current);
-                else {
-                  setState(settings.getOnboarding());
-                  setFailed(false);
+            <div id="onboarding-error">
+              <ErrorState
+                inline
+                description={
+                  t(
+                    conflict
+                      ? 'account.conflict'
+                      : session.mode === 'demo'
+                        ? 'common.saveError'
+                        : 'account.saveFailed',
+                  ) +
+                  (session.mode === 'live' && failureCode
+                    ? ` ${t('account.supportCode', { code: failureCode })}`
+                    : '')
                 }
-              }}
-            />
+                onRetry={() => {
+                  if (pending.current) void persist(pending.current);
+                  else {
+                    setState(settings.getOnboarding());
+                    setFailed(false);
+                  }
+                }}
+              />
+            </div>
           )}
           <div className="actions">
             <Button

@@ -1,7 +1,14 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  type ReactNode,
+} from 'react';
 import type { Locale } from '../data/models';
 import { useRepositories } from '../app/providers/RepositoryProvider';
 import { de, type TranslationKey } from './de-DE';
+import { useSession } from '../app/providers/SessionProvider';
 import { en } from './en-US';
 export function translate(
   locale: Locale,
@@ -20,9 +27,14 @@ const Context = createContext<{
 } | null>(null);
 export function I18nProvider({ children }: { children: ReactNode }) {
   const { settings } = useRepositories();
+  const session = useSession();
   const [locale, setLocale] = useState<Locale>(
     () => settings.getSettings().locale,
   );
+  useEffect(() => {
+    if (session.mode === 'live' && session.account?.locale)
+      setLocale(session.account.locale);
+  }, [session.mode, session.account?.locale]);
   return (
     <Context.Provider
       value={{

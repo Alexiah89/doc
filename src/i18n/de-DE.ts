@@ -1,4 +1,67 @@
 export const de = {
+  'state.googleLogin': 'Google-Anmeldung läuft …',
+  'status.title': 'Kontostatus',
+  'status.suspended': 'Dein Konto ist derzeit eingeschränkt.',
+  'status.pending': 'Die Löschung deines Kontos wird vorbereitet.',
+  'status.deleted': 'Dieses Konto ist gelöscht.',
+  'status.description':
+    'Für dieses Konto ist derzeit kein normaler App-Zugriff möglich. Interne Details werden hier nicht angezeigt.',
+  'account.savePreferences': 'Training und Privatsphäre speichern',
+  'account.preferencesSaved':
+    'Deine Einstellungen wurden im Konto gespeichert.',
+  'auth.unauthorizedDomain':
+    'Diese Website ist für die Google-Anmeldung noch nicht freigegeben. Bitte die Domain in Firebase autorisieren.',
+  'auth.network':
+    'Die Anmeldung konnte wegen einer Verbindungsunterbrechung nicht abgeschlossen werden. Bitte versuche es erneut.',
+  'auth.invalidCredential':
+    'Die Anmeldung ist ungültig. Bitte melde dich erneut an.',
+  'auth.redirect': 'Anmeldung im selben Fenster fortsetzen',
+  'auth.redirectHint':
+    'Falls ein Popup nicht geöffnet werden kann, ist eine Weiterleitung vorbereitet. Die Auth-Domain muss dafür passend konfiguriert sein.',
+  'state.initializing': 'FlowCircle bereitet die Anmeldung vor …',
+  'state.restore': 'Deine Anmeldung wird wiederhergestellt …',
+  'state.accountLoading': 'Dein FlowCircle-Konto wird geladen oder erstellt …',
+  'state.onboardingLoading': 'Deine gespeicherte Auswahl wird geladen …',
+  'state.onboardingSaving': 'Deine Auswahl wird gespeichert …',
+  'state.logout': 'Du wirst abgemeldet …',
+  'errors.unauthenticated': 'Bitte melde dich an.',
+  'errors.invalid-auth-token':
+    'Deine Anmeldung ist nicht mehr gültig. Bitte melde dich erneut an.',
+  'errors.account-disabled': 'Dieses Konto ist derzeit nicht verfügbar.',
+  'errors.account-suspended': 'Dein Konto ist derzeit eingeschränkt.',
+  'errors.firebase-not-configured':
+    'Die Firebase-Anbindung ist noch nicht vollständig konfiguriert.',
+  'errors.backend-unavailable':
+    'Das Backend ist gerade nicht erreichbar. Bitte versuche es erneut.',
+  'errors.user-bootstrap-failed':
+    'Dein FlowCircle-Konto konnte nicht vorbereitet werden. Bitte versuche es erneut.',
+  'errors.username-reservation-failed':
+    'Ein eindeutiger Benutzername konnte gerade nicht reserviert werden. Bitte versuche es erneut.',
+  'errors.onboarding-invalid-step': 'Dieser Onboarding-Schritt ist ungültig.',
+  'errors.onboarding-invalid-selection':
+    'Bitte überprüfe deine Trainingsauswahl.',
+  'errors.onboarding-save-failed':
+    'Deine Auswahl konnte nicht gespeichert werden.',
+  'errors.validation-error': 'Bitte überprüfe deine Eingaben.',
+  'errors.rate-limit-exceeded':
+    'Du hast gerade viele Anfragen gesendet. Bitte warte kurz und versuche es erneut.',
+  'errors.internal-error':
+    'Ein interner Fehler ist aufgetreten. Bitte versuche es erneut.',
+  'dev.firebaseClient': 'Firebase Client konfiguriert',
+  'dev.firebaseAdmin': 'Firebase Admin konfiguriert',
+  'dev.authMode': 'Auth-Modus',
+  'dev.authState': 'Authstatus',
+  'dev.uid': 'Nutzerkennung (maskiert)',
+  'dev.accountStatus': 'Kontostatus',
+  'dev.onboardingStatus': 'Onboardingstatus',
+  'dev.onboardingStep': 'Aktueller Onboarding-Schritt',
+  'dev.authEmulator': 'Auth Emulator aktiv',
+  'dev.firestoreEmulator': 'Firestore Emulator aktiv',
+  'dev.yes': 'Ja',
+  'dev.no': 'Nein',
+  'dev.unknown': 'Nicht bestätigt',
+  'dev.noUser': 'Kein angemeldeter Nutzer',
+
   'account.supportCode': 'Fehlercode: {code}',
   'account.configProjectMissing':
     'Im Server-Deployment fehlt FIREBASE_PROJECT_ID. Bitte den Eintrag für diese Vercel-Umgebung ergänzen und neu deployen.',

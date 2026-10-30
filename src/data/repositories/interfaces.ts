@@ -8,11 +8,16 @@ import type {
   ProgramSession,
   Review,
   User,
+  AuthUser,
   UserProfile,
   UserProgram,
 } from '../models';
 export interface AuthRepository {
-  getCurrentUser(): Promise<User | null>;
+  getCurrentUser(): Promise<AuthUser | null>;
+  signInWithGoogle(): Promise<AuthUser>;
+  signOut(): Promise<void>;
+  getIdToken(forceRefresh?: boolean): Promise<string | null>;
+  subscribeToAuthState(callback: (user: AuthUser | null) => void): () => void;
   startDemo(): Promise<User>;
 }
 export interface ProgramRepository {

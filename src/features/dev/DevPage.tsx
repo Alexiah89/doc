@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Flower2 } from 'lucide-react';
+import { useSession } from '../../app/providers/SessionProvider';
+import {
+  isFirebaseClientConfigured,
+  clientEmulatorsEnabled,
+} from '../../data/firebase/auth';
 import { appConfig } from '../../app/config';
 import { useI18n, type TranslationKey } from '../../i18n';
 import { useCatalog } from '../../hooks/useCatalog';
@@ -27,6 +32,7 @@ import {
 import { ResourceView } from '../../design-system/patterns/ResourceView';
 export default function DevPage() {
   const { t, locale } = useI18n();
+  const session = useSession();
   const catalog = useCatalog();
   const health = useResource(useCallback(() => getHealth(), []));
   const [width, setWidth] = useState(window.innerWidth);
@@ -36,6 +42,47 @@ export default function DevPage() {
     return () => window.removeEventListener('resize', resize);
   }, []);
   const rows: [TranslationKey, string][] = [
+    [
+      'dev.firebaseClient',
+      t(isFirebaseClientConfigured() ? 'dev.yes' : 'dev.no'),
+    ],
+    [
+      'dev.firebaseAdmin',
+      health.data?.diagnostics
+        ? t(
+            health.data.diagnostics.firebaseAdminConfigured
+              ? 'dev.yes'
+              : 'dev.no',
+          )
+        : t('dev.unknown'),
+    ],
+    ['dev.authMode', session.mode === 'demo' ? 'Demo' : 'Firebase'],
+    ['dev.authState', session.authState],
+    [
+      'dev.uid',
+      session.identity
+        ? `••••${session.identity.uid.slice(-4)}`
+        : t('dev.noUser'),
+    ],
+    ['dev.accountStatus', session.account?.accountStatus ?? t('dev.unknown')],
+    [
+      'dev.onboardingStatus',
+      session.account?.onboardingStatus ?? t('dev.unknown'),
+    ],
+    [
+      'dev.onboardingStep',
+      session.account
+        ? String(session.account.onboarding.step + 1)
+        : t('dev.unknown'),
+    ],
+    ['dev.authEmulator', t(clientEmulatorsEnabled() ? 'dev.yes' : 'dev.no')],
+    [
+      'dev.firestoreEmulator',
+      health.data?.diagnostics
+        ? t(health.data.diagnostics.firestoreEmulator ? 'dev.yes' : 'dev.no')
+        : t('dev.unknown'),
+    ],
+
     ['dev.environment', appConfig.environment],
     ['dev.version', appConfig.version],
     ['dev.mode', t(appConfig.demoMode ? 'dev.enabled' : 'dev.off')],
@@ -127,11 +174,13 @@ export default function DevPage() {
               <ProgressBar value={27} label={t('program.progress')} />
             </Card>
             <div className="two-column">
-              <ProgramCard
-                program={data.programs[0]}
-                progress={data.library[0].progress}
-              />
-              <SessionCard session={data.sessions[0]} />
+              {data.programs[0] && (
+                <ProgramCard
+                  program={data.programs[0]}
+                  progress={data.library[0]?.progress}
+                />
+              )}
+              {data.sessions[0] && <SessionCard session={data.sessions[0]} />}
               <ErrorState
                 inline
                 title={t('dev.errorInline')}

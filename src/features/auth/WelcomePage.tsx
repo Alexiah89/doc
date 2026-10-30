@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useRef } from 'react';
+import { AccountStatusPage } from '../account/AccountStatusPage';
 import { Flower2 } from 'lucide-react';
 import { useI18n, type TranslationKey } from '../../i18n';
 import {
@@ -19,6 +21,7 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [error, setError] = useState<TranslationKey | null>(null);
+  const loginLock = useRef(false);
   const [loading, setLoading] = useState(false);
   async function startDemo() {
     session.enterDemo();
@@ -32,11 +35,13 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
     } else navigate('/onboarding');
   }
   async function signIn() {
+    if (loginLock.current) return;
     setError(null);
     if (!session.configured) {
       setError('auth.configMissing');
       return;
     }
+    loginLock.current = true;
     setLoading(true);
     try {
       await session.signIn();
@@ -51,12 +56,23 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
           : code === 'auth/popup-closed-by-user' ||
               code === 'auth/cancelled-popup-request'
             ? 'auth.cancelled'
-            : 'auth.failed',
+            : code === 'auth/unauthorized-domain'
+              ? 'auth.unauthorizedDomain'
+              : code === 'auth/network-request-failed'
+                ? 'auth.network'
+                : code === 'auth/user-disabled'
+                  ? 'errors.account-disabled'
+                  : code === 'auth/invalid-credential'
+                    ? 'auth.invalidCredential'
+                    : 'auth.failed',
       );
     } finally {
+      loginLock.current = false;
       setLoading(false);
     }
   }
+  if (session.mode === 'live' && session.authState === 'account-suspended')
+    return <AccountStatusPage />;
   if (
     session.mode === 'live' &&
     session.status === 'ready' &&
@@ -106,12 +122,20 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
       </div>
       <div className="actions">
         <Button
+          loadingLabel={t(
+            loading
+              ? 'state.googleLogin'
+              : session.status === 'initializing'
+                ? 'state.restore'
+                : 'state.accountLoading',
+          )}
           loading={
             loading ||
             (session.mode === 'live' &&
               (session.status === 'initializing' ||
                 session.status === 'loadingAccount'))
           }
+          aria-describedby={error ? 'login-error' : undefined}
           onClick={() => void signIn()}
         >
           {t('auth.google')}
@@ -120,12 +144,35 @@ export function WelcomePage({ login = false }: { login?: boolean }) {
           {t('auth.demo')}
         </Button>
       </div>
-      {error && <ErrorState inline description={t(error)} />}{' '}
+      {error === 'auth.popupBlocked' && (
+        <div className="notice">
+          <p>{t('auth.redirectHint')}</p>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void session.signInRedirect().catch(() => setError('auth.failed'))
+            }
+          >
+            {t('auth.redirect')}
+          </Button>
+        </div>
+      )}
+      {error === 'auth.cancelled' ? (
+        <p id="login-error" role="status" className="notice">
+          {t(error)}
+        </p>
+      ) : (
+        error && (
+          <div id="login-error">
+            <ErrorState inline description={t(error)} />
+          </div>
+        )
+      )}{' '}
       {session.mode === 'live' && session.status === 'error' && (
         <AccountAccessError />
       )}{' '}
       {session.mode === 'live' && session.status === 'loadingAccount' && (
-        <LoadingState />
+        <LoadingState label={t('state.accountLoading')} />
       )}
       <p className="muted">{t('auth.separateDemo')}</p>
       <Link to="/home">{t('nav.home')}</Link>

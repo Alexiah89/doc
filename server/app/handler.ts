@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { dispatch } from '../routes/index.js';
+import { usersRoute } from '../routes/users.js';
 import { accountRoute } from '../routes/account.js';
 import { firebaseAccountServices } from '../services/account/firebase.js';
 import {
@@ -8,6 +9,12 @@ import {
 } from '../services/account/contracts.js';
 import { internalError } from '../middleware/errors.js';
 const accountPaths = new Set([
+  '/api/v1/users/bootstrap',
+  '/api/v1/users/me',
+  '/api/v1/users/me/onboarding',
+  '/api/v1/users/me/onboarding/complete',
+  '/api/v1/users/me/preferences',
+  '/api/v1/users/me/privacy',
   '/api/v1/me',
   '/api/v1/me/onboarding',
   '/api/v1/me/profile',
@@ -65,11 +72,11 @@ export function createApiHandler(
       const path = new URL(req.url ?? '/', 'http://localhost').pathname;
       const method = req.method ?? 'GET';
       const body =
-        accountPaths.has(path) && ['PUT', 'PATCH'].includes(method)
+        accountPaths.has(path) && ['PUT', 'PATCH', 'POST'].includes(method)
           ? await readBody(req)
           : undefined;
       const result = accountPaths.has(path)
-        ? await accountRoute(
+        ? await (path.startsWith('/api/v1/users/') ? usersRoute : accountRoute)(
             method,
             path,
             req.headers.authorization,

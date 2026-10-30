@@ -3,11 +3,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { newOnboarding } from '../../../shared/account';
 const mock = vi.hoisted(() => ({
   verify: vi.fn(),
-  txGet: vi.fn(),
-  txCreate: vi.fn(),
-  txSet: vi.fn(),
-  doc: vi.fn(() => ({})),
-  run: vi.fn(),
+  docs: new Map<string, unknown>(),
 }));
 vi.mock('firebase-admin/app', () => ({
   applicationDefault: () => ({}),
@@ -18,29 +14,45 @@ vi.mock('firebase-admin/app', () => ({
 vi.mock('firebase-admin/auth', () => ({
   getAuth: () => ({ verifyIdToken: mock.verify }),
 }));
-vi.mock('firebase-admin/firestore', () => ({
-  getFirestore: () => ({
-    collection: () => ({ doc: mock.doc }),
-    runTransaction: mock.run,
-  }),
-}));
-import { firebaseAccountServices } from './firebase';
-const stored = () => ({
-  uid: 'user-a',
-  displayName: 'Alex',
-  bio: '',
-  username: 'user_a',
-  onboarding: newOnboarding(),
-  revision: 2,
-  createdAt: '2026-10-30T00:00:00.000Z',
-  updatedAt: '2026-10-30T00:00:00.000Z',
+vi.mock('firebase-admin/firestore', async (importOriginal) => {
+  const real =
+    await importOriginal<typeof import('firebase-admin/firestore')>();
+  return {
+    ...real,
+    getFirestore: () => ({
+      doc: (path: string) => ({ path }),
+      runTransaction: async (
+        callback: (tx: {
+          get: (ref: {
+            path: string;
+          }) => Promise<{ exists: boolean; data: () => unknown }>;
+          create: (ref: { path: string }, v: unknown) => void;
+          set: (ref: { path: string }, v: unknown) => void;
+        }) => unknown,
+      ) =>
+        callback({
+          async get(ref) {
+            return {
+              exists: mock.docs.has(ref.path),
+              data: () => mock.docs.get(ref.path),
+            };
+          },
+          create(ref, v) {
+            if (mock.docs.has(ref.path)) throw Error('Duplicate');
+            mock.docs.set(ref.path, v);
+          },
+          set(ref, v) {
+            mock.docs.set(ref.path, v);
+          },
+        }),
+    }),
+  };
 });
+import { firebaseAccountServices } from './firebase';
 beforeEach(() => {
   vi.clearAllMocks();
+  mock.docs.clear();
   vi.stubEnv('FIREBASE_PROJECT_ID', 'test-project');
-  mock.run.mockImplementation((callback) =>
-    callback({ get: mock.txGet, create: mock.txCreate, set: mock.txSet }),
-  );
 });
 afterEach(() => vi.unstubAllEnvs());
 describe('Firebase Admin adapter (SDK doubles)', () => {
@@ -51,63 +63,75 @@ describe('Firebase Admin adapter (SDK doubles)', () => {
     ).toEqual({ uid: 'user-a', name: 'Alex' });
     expect(mock.verify).toHaveBeenCalledWith('test-only-token', true);
   });
-  it('rejects revoked tokens without exposing the SDK error', async () => {
+  it('rejects revoked tokens without exposing SDK errors', async () => {
     mock.verify.mockRejectedValue({
       code: 'auth/id-token-revoked',
-      message: 'internal details',
+      message: 'private details',
     });
     await expect(
       firebaseAccountServices.verifyToken('test-only-token'),
-    ).rejects.toMatchObject({ status: 401, code: 'invalid-token' });
+    ).rejects.toMatchObject({ status: 401, code: 'invalid-auth-token' });
   });
-  it('creates a private account inside a transaction and encodes the UID path', async () => {
-    mock.txGet.mockResolvedValue({ exists: false });
+  it('creates private user/profile documents and an encoded UID path', async () => {
     const account = await firebaseAccountServices.store.getOrCreate({
       uid: 'user/a',
       name: 'Alex',
     });
-    expect(mock.doc).toHaveBeenCalledWith('user%2Fa');
-    expect(mock.run).toHaveBeenCalledTimes(1);
-    expect(mock.txCreate).toHaveBeenCalledTimes(1);
+    expect(mock.docs.has('users/user%2Fa')).toBe(true);
+    expect(mock.docs.has('profiles/user%2Fa')).toBe(true);
     expect(account.onboarding.privacy).toBe('private');
+    expect(account.username).not.toContain('user/a');
     expect(account.revision).toBe(0);
   });
-  it('rejects stale writes before updating Firestore', async () => {
-    mock.txGet.mockResolvedValue({ exists: true, data: stored });
+  it('rejects stale updates without changing profile data', async () => {
+    await firebaseAccountServices.store.getOrCreate({
+      uid: 'user-a',
+      name: 'Alex',
+    });
     await expect(
-      firebaseAccountServices.store.update({ uid: 'user-a' }, 1, (a) => a),
+      firebaseAccountServices.store.update({ uid: 'user-a' }, 99, (a) => ({
+        ...a,
+        displayName: 'Stale',
+      })),
     ).rejects.toMatchObject({ status: 409 });
-    expect(mock.txSet).not.toHaveBeenCalled();
+    const account = await firebaseAccountServices.store.getOrCreate({
+      uid: 'user-a',
+      name: 'Alex',
+    });
+    expect(account.displayName).toBe('Alex');
   });
-  it('increments revisions transactionally and preserves server identity fields', async () => {
-    mock.txGet.mockResolvedValue({ exists: true, data: stored });
+  it('increments revisions and preserves identity and reserved username', async () => {
+    const original = await firebaseAccountServices.store.getOrCreate({
+      uid: 'user-a',
+      name: 'Alex',
+    });
     const account = await firebaseAccountServices.store.update(
       { uid: 'user-a' },
-      2,
+      0,
       (a) => ({
         ...a,
         uid: 'forged',
         username: 'forged',
         revision: 99,
         displayName: 'Updated',
+        onboarding: newOnboarding(),
       }),
     );
     expect(account).toMatchObject({
       uid: 'user-a',
-      username: 'user_a',
-      revision: 3,
+      username: original.username,
+      revision: 1,
       displayName: 'Updated',
     });
-    expect(mock.txSet).toHaveBeenCalledTimes(1);
   });
-  it('fails closed on missing project config or production emulator settings', async () => {
+  it('fails closed on missing configuration or production emulators', async () => {
     vi.stubEnv('FIREBASE_PROJECT_ID', '');
     await expect(
       firebaseAccountServices.verifyToken('test'),
     ).rejects.toMatchObject({ status: 503 });
     vi.stubEnv('FIREBASE_PROJECT_ID', 'test-project');
     vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('FIRESTORE_EMULATOR_HOST', 'localhost:8080');
+    vi.stubEnv('FIRESTORE_EMULATOR_HOST', '127.0.0.1:8080');
     await expect(
       firebaseAccountServices.verifyToken('test'),
     ).rejects.toMatchObject({ status: 503 });

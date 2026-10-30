@@ -1,4 +1,10 @@
 import { test, expect } from '@playwright/test';
+test.beforeEach(async ({ page }, testInfo) => {
+  if (!testInfo.title.startsWith('production account'))
+    await page.addInitScript(() =>
+      sessionStorage.setItem('flowcircle.mode', 'demo'),
+    );
+});
 for (const [label, width] of [
   ['phone', 390],
   ['tablet', 820],
@@ -210,4 +216,29 @@ test('production account routes require login and keep demo entry explicit witho
   await expect(
     page.getByText('Demo · Beispieldaten', { exact: true }),
   ).toBeVisible();
+});
+
+test('four demo onboarding steps are keyboard-operable', async ({ page }) => {
+  await page.goto('/onboarding');
+  await page.getByRole('button', { name: 'Yoga', exact: true }).focus();
+  await page.keyboard.press('Space');
+  await expect(
+    page.getByRole('button', { name: 'Yoga', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Weiter', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('radio', { name: 'Unter 15 Minuten' }).focus();
+  await page.keyboard.press('Space');
+  await page.getByRole('button', { name: 'Weiter', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Entspannung', exact: true }).focus();
+  await page.keyboard.press('Space');
+  await page.getByRole('button', { name: 'Weiter', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByRole('radio', { name: 'Privat starten' }),
+  ).toBeChecked();
+  await page.getByRole('button', { name: 'Demo starten', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/home$/);
 });

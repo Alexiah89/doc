@@ -49,6 +49,14 @@ export const profileInputSchema = z
 export const accountSchema = z
   .object({
     uid: z.string().min(1).max(128),
+    locale: z.enum(['de-DE', 'en-US']).optional(),
+    avatarUrl: z.string().nullable().optional(),
+    accountStatus: z
+      .enum(['active', 'suspended', 'deletion_pending', 'deleted'])
+      .optional(),
+    onboardingStatus: z
+      .enum(['not_started', 'in_progress', 'completed'])
+      .optional(),
     displayName: z.string().max(80),
     bio: z.string().max(280),
     username: z.string(),

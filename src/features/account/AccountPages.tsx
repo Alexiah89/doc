@@ -11,6 +11,7 @@ import {
   SectionHeader,
 } from '../../design-system/components';
 import { useI18n, type TranslationKey } from '../../i18n';
+import { PreferenceForm } from './PreferenceForm';
 import { ApiRequestError } from '../../data/api/client';
 export function AccountHomePage() {
   const session = useSession();
@@ -26,7 +27,7 @@ export function AccountHomePage() {
       <Card>
         <h2>{t('account.onboardingSaved')}</h2>
         <p>{t('account.savedDescription')}</p>
-        <Link to="/onboarding">{t('account.editOnboarding')}</Link>
+        <Link to="/settings">{t('account.editOnboarding')}</Link>
       </Card>
       <SectionHeader title={t('home.next')} />
       <EmptyState
@@ -49,7 +50,7 @@ export function AccountProfilePage() {
         <Link to="/settings">{t('nav.settings')}</Link>
       </PageHeader>
       <Card className="profile-intro">
-        <Avatar name={account.displayName} />
+        <Avatar name={account.displayName} photoUrl={account.avatarUrl} />
         <div>
           <h2>{account.displayName}</h2>
           <p>@{account.username}</p>
@@ -69,7 +70,7 @@ export function AccountProfilePage() {
           ))}
         </div>
         <p>{t('privacy.notes')}</p>
-        <Link to="/onboarding">{t('account.editOnboarding')}</Link>
+        <Link to="/settings">{t('account.editOnboarding')}</Link>
       </Card>
       <p className="muted">{t('account.socialLater')}</p>
     </>
@@ -125,7 +126,10 @@ export function AccountSettingsPage() {
       <Card>
         <h2>{t('settings.account')}</h2>
         <form onSubmit={(event) => void save(event)}>
-          <fieldset disabled={saving}>
+          <fieldset
+            disabled={saving}
+            aria-describedby={error ? 'profile-error' : undefined}
+          >
             <label>
               {t('account.displayName')}
               <input
@@ -160,15 +164,24 @@ export function AccountSettingsPage() {
           </p>
         )}
       </Card>
+      <PreferenceForm />
       <Card>
         <h2>{t('settings.privacy')}</h2>
         <p>{t('privacy.notes')}</p>
         <p>{t('account.noAutomaticSharing')}</p>
-        <Link to="/onboarding">{t('account.editOnboarding')}</Link>
+        <Link to="/settings">{t('account.editOnboarding')}</Link>
       </Card>
-      {error && <ErrorState inline description={t(error)} />}
+      {error && (
+        <div id="profile-error">
+          <ErrorState inline description={t(error)} />
+        </div>
+      )}
       <div className="actions">
-        <Button variant="secondary" onClick={() => void logout()}>
+        <Button
+          variant="secondary"
+          loading={session.loggingOut}
+          onClick={() => void logout()}
+        >
           {t('auth.signOut')}
         </Button>
       </div>

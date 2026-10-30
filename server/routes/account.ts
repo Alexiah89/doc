@@ -6,6 +6,29 @@ import {
   AccountError,
   type AccountServices,
 } from '../services/account/contracts.js';
+import type { Account } from '../../shared/account.js';
+function legacyReply(account: Account) {
+  const {
+    uid,
+    displayName,
+    bio,
+    username,
+    onboarding,
+    revision,
+    createdAt,
+    updatedAt,
+  } = account;
+  return {
+    uid,
+    displayName,
+    bio,
+    username,
+    onboarding,
+    revision,
+    createdAt,
+    updatedAt,
+  };
+}
 import type { ApiResponse } from '../types/index.js';
 export async function accountRoute(
   method: string,
@@ -23,7 +46,9 @@ export async function accountRoute(
   if (method === 'GET' && path === '/api/v1/me')
     return {
       status: 200,
-      body: { account: await services.store.getOrCreate(identity) },
+      body: {
+        account: legacyReply(await services.store.getOrCreate(identity)),
+      },
     };
   if (method === 'PUT' && path === '/api/v1/me/onboarding') {
     const input = onboardingUpdateSchema.safeParse(body);
@@ -34,7 +59,7 @@ export async function accountRoute(
       input.data.expectedRevision,
       (current) => ({ ...current, onboarding: input.data.onboarding }),
     );
-    return { status: 200, body: { account } };
+    return { status: 200, body: { account: legacyReply(account) } };
   }
   if (method === 'PATCH' && path === '/api/v1/me/profile') {
     const input = profileUpdateSchema.safeParse(body);
@@ -45,7 +70,7 @@ export async function accountRoute(
       input.data.expectedRevision,
       (current) => ({ ...current, ...input.data.profile }),
     );
-    return { status: 200, body: { account } };
+    return { status: 200, body: { account: legacyReply(account) } };
   }
   throw new AccountError(405, 'method-not-allowed', 'errors.unexpected');
 }

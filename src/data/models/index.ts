@@ -141,3 +141,10 @@ export interface TrainingOverview {
   weeklySessionCounts: number[];
   weeklyMinutes: number;
 }
+
+export interface AuthUser {
+  uid: string;
+  displayName: string | null;
+  photoUrl: string | null;
+  emailVerified: boolean;
+}

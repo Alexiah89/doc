@@ -16,6 +16,10 @@
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
-    "tests/e2e"
+    "tests/e2e",
+    "server/**/*.test.ts",
+    "server/test/**/*.ts",
+    "tests/emulator",
+    "vitest.emulator.config.ts"
   ]
 }

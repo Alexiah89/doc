@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -13,12 +13,16 @@ function mount(path = '/', repositories?: Repositories, development = false) {
     </MemoryRouter>,
   );
 }
+beforeEach(() => {
+  sessionStorage.setItem('flowcircle.mode', 'demo');
+});
 const names = ['Home', 'Entdecken', 'Bibliothek', 'Circles', 'Profil'];
 describe('App and navigation', () => {
   it('does not simulate live functionality when demo mode is disabled', () => {
     const previous = appConfig.demoMode;
     try {
       appConfig.demoMode = false;
+      sessionStorage.removeItem('flowcircle.mode');
       mount('/home');
       expect(
         screen.getByRole('heading', { name: 'Willkommen bei FlowCircle' }),
